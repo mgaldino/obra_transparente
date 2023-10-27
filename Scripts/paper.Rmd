@@ -2,6 +2,8 @@
 title: "Unlocking Accountability: A Mixed-Methods Analysis of Bottom-Up Approaches in Brazilian Public Policy"
 date: "2023-10-26"
 output: pdf_document
+sansfont: Sans Serif
+fontsize: 12pt
 author:
 - name: Manoel Galdino
   affiliation: Universidade de São Paulo
