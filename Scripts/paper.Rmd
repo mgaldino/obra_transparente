@@ -284,28 +284,40 @@ We have already observed qualitative evidence indicating that local OSB monitori
 
 To do so, we collected data on school and nursery construction projects across the entire country, encompassing over two thousand municipalities and more than 14 thousand construction projects, spanning all phases from planning to execution and completion. The table below provides descriptive statistics for these construction projects.
 
+[Insert Table]
+
 When comparing "treated" and "untreated" units, there is difference between the groups, as show below by the percentage of construction works within both groups before the project started.
 
 ```{r tables, echo=FALSE, message=FALSE, results='asis'}
 antes_projeto %>%
+  inner_join(depois_projeto, by = "indicator_muni_ot") %>%
   gt() %>%
   tab_header(
     title = "Percentage of finished fonstruction works before the project",
-    subtitle = "Situation in August 2017") %>%
+    subtitle = "Situation in August 2017 and August 2019") %>%
   cols_label(
     indicator_muni_ot = "Participating Municipalities in Obra Transparente ",
-    perc = "Percentage of Completed Constructions"
+    perc.x = "Percentage of Completed Constructions Before Project",
+    perc.y = "Percentage of Completed Constructions After Project"
   ) %>%
     fmt_percent(
-    columns = perc,
+    columns = c(perc.x, perc.y),
     decimals = 0
   )
 ```
 
 
-Our primary objective is to compare the project's effects on the rate of delivery. To estimate the Average Treatment Effect on the Treated (ATT), we employed a matching strategy (Ho et al. (2007; Rubin, 1973). We also applied the same procedure to pre-project data to ensure that there were no substantial differences between the treated and control groups. The table below presents estimates for the causal effect on the treated units regarding the change in completion rates before and after the project.
+Our primary objective is to compare the project's effects on the rate of delivery. To estimate the Average Treatment Effect on the Treated (ATT), we employed a matching strategy (Ho et al. (2007; Rubin, 1973). We also applied the same procedure to pre-project data to ensure that there were no substantial differences between the treated and control groups. 
+
+We estimate all models using the following regression equation:
+
+$$
+Y_i = \alpha + \beta_1 T_i + \gamma X_i + \theta Z_i + \epsilon_i
+$$
+where $i$ indexes the experiment units. $Y_i$ is $1$ if a construction work is finished, and $0$ otherwise, α is the intercept, β denotes the average treatment effect on the treated (ATT), and $T_i$ is a binary treatment indicator (municipality is part or not of Obra Transparent). $\gamma$ is a vector of fixed effects, $X_i$ is a matrix of Brazilian states’ fixed effects, $\theta$ is a vector of controls, and $Z_i$ an array of controls for the case $i$. The error term is denoted by $ε_i$. We cluster the standard errors at the municipality level as mayors are the main target of the local OSBs work. We fit a Bayesian model with rstanarm (Goodrich, 2023) with default weakly informative priors (Gelman et. al., 2008).
 
 
+The table below presents estimates for the causal effect on the treated units regarding the change in completion rates before and after the project.
 
 ```{r balancing process,  message=FALSE, echo=FALSE}
 
@@ -316,8 +328,7 @@ df_balancing_aux <- obras_inicio_projeto_ot %>%
   mutate(municipio1 = tolower(iconv(municipio, "UTF-8",  "ASCII//TRANSLIT"))) %>%
   inner_join(aux_muni1, by = join_by(municipio1  == name_muni1, uf == abbrev_state)) %>%
   inner_join(ipea_final, by = join_by(code_muni == tcode)) %>%
-  mutate(indicator_ot = ifelse(is.na(indicator_ot), 0, indicator_ot),
-         perc_pea18 =pea18/populacao,
+  mutate(perc_pea18 =pea18/populacao,
          log_pop = log(populacao),
          log_renda = log(rpc*populacao),
          log_rpc = log(rpc),
@@ -339,7 +350,7 @@ df_balancing_aux_post <- obras_inicio_projeto_ot %>%
          log_renda = log(rpc*populacao),
          log_rpc = log(rpc))
 ```
-
+Table (ref number) summarizes the main results of the regression. 
 
 ```{r balancing check, message=FALSE, echo=FALSE}
 m.out <- matchit(indicator_ot ~ perc_pea18  + ext_pobres  + log_rpc + 
@@ -396,10 +407,6 @@ fit <- lm(concluida ~ indicator_ot + perc_pea18  + ext_pobres  + log_rpc +
 #                 wts = "weights") %>%
 #   gt()
 #   
-
-
-
-
 
 matching_data <- match.data(m.out2) %>%
   dplyr::select(weights, code_muni, subclass)
@@ -480,6 +487,10 @@ https://www.transparencia.org.br/downloads/publicacoes/levantamentoobrasfederais
 Fairfield, T., & Charman, A. E. (2022). Social inquiry and Bayesian inference: Rethinking qualitative research. Cambridge University Press.
 
 Fox, J. A. (2015). Social accountability: what does the evidence really say?. World Development, 72, 346-361.
+
+Gelman, A., Jakulin, A., Pittau, M. G., & Su, Y. S. (2008). A weakly informative default prior distribution for logistic and other regression models.
+
+Goodrich B, Gabry J, Ali I, Brilleman S (2023). “rstanarm: Bayesian applied regression modeling via Stan.” R package version 2.26.1, https://mc-stan.org/rstanarm/.
 
 Gong, T., & Xiao, H. (2017). Socially embedded anti‐corruption governance: Evidence from Hong Kong. Public Administration and Development, 37(3), 176-190.
 
