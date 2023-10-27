@@ -41,18 +41,20 @@ library(marginaleffects)
 # 
 # df_cidades_ot <- data.frame(municipio = lista_cidades_ot, indicator_ot = 1)
 
-load(here("obra_transparente", "Dados", "obras_inicio_projeto.Rdata"))
-load(here("obra_transparente", "Dados", "obras_fim_seg_fase.Rdata"))
+# load(here("obra_transparente", "Dados", "obras_inicio_projeto.Rdata"))
+# load(here("obra_transparente", "Dados", "obras_fim_seg_fase.Rdata"))
 
-# load(here("Dados", "obras_inicio_projeto.Rdata"))
-# load(here("Dados", "obras_fim_seg_fase.Rdata"))
+load(here("Dados", "obras_inicio_projeto.Rdata"))
+load(here("Dados", "obras_fim_seg_fase.Rdata"))
 
-simec23 <- fread(here("obra_transparente", "Dados", "simec 25-10-23 - simec.csv"), encoding = "UTF-8")
-# simec23 <- fread(here("Dados", "simec 25-10-23 - simec.csv"), encoding = "UTF-8")
+# simec23 <- fread(here("obra_transparente", "Dados", "simec 25-10-23 - simec.csv"), encoding = "UTF-8")
+simec23 <- fread(here("Dados", "simec 25-10-23 - simec.csv"), encoding = "UTF-8")
 
-load(here("obra_transparente", "Dados", "obras_fim_seg_fase.Rdata"))
+# load(here("obra_transparente", "Dados", "obras_fim_seg_fase.Rdata"))
 
-df_cidades_ot <- read_excel("Dados/181114 - Situação obras_atual.xlsx", 
+load(here("Dados", "obras_fim_seg_fase.Rdata"))
+
+df_cidades_ot <- read_excel(here("Dados", "181114 - Situação obras_atual.xlsx"), 
                                            sheet = "SIMEC-Mai17", skip = 1) %>%
   clean_names() %>%
   filter(!is.na(id)) %>%
