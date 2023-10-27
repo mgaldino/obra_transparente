@@ -26,8 +26,15 @@ library(readxl)
 library(tidyverse)
 library(gt)
 library(ipeadatar)
-library(MatchIt)
-library(marginaleffects)
+library(rstan)
+library(arm)
+library(rstanarm)
+library(survey)
+library(broom)
+library(broom.mixed)
+library(MetBrewer)
+
+
 
 ```
 
