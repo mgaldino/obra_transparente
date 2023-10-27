@@ -284,7 +284,6 @@ We have already observed qualitative evidence indicating that local OSB monitori
 
 To do so, we collected data on school and nursery construction projects across the entire country, encompassing over two thousand municipalities and more than 14 thousand construction projects, spanning all phases from planning to execution and completion. The table below provides descriptive statistics for these construction projects.
 
-[Insert Table]
 
 When comparing "treated" and "untreated" units, there is difference between the groups, as show below by the percentage of construction works within both groups before the project started.
 
@@ -309,17 +308,17 @@ antes_projeto %>%
 
 Our primary objective is to compare the project's effects on the rate of delivery. To estimate the Average Treatment Effect on the Treated (ATT), we employed a matching strategy (Ho et al. (2007; Rubin, 1973). We also applied the same procedure to pre-project data to ensure that there were no substantial differences between the treated and control groups. 
 
-We estimate all models using the following regression equation:
+We estimate all models using the a varying-intercept regression equation (Gelman & Hill, 2006):
 
 $$
 Y_i = \alpha + \beta_1 T_i + \gamma X_i + \theta Z_i + \epsilon_i
 $$
-where $i$ indexes the experiment units. $Y_i$ is $1$ if a construction work is finished, and $0$ otherwise, α is the intercept, β denotes the average treatment effect on the treated (ATT), and $T_i$ is a binary treatment indicator (municipality is part or not of Obra Transparent). $\gamma$ is a vector of fixed effects, $X_i$ is a matrix of Brazilian states’ fixed effects, $\theta$ is a vector of controls, and $Z_i$ an array of controls for the case $i$. The error term is denoted by $ε_i$. We cluster the standard errors at the municipality level as mayors are the main target of the local OSBs work. We fit a Bayesian model with rstanarm (Goodrich, 2023) with default weakly informative priors (Gelman et. al., 2008).
+where $i$ indexes the construction units. $Y_i$ is $1$ if a construction work is finished, and $0$ otherwise, α is the intercept, β denotes the average treatment effect on the treated (ATT), and $T_i$ is a binary treatment indicator (municipality is part or not of Obra Transparent). $\gamma$ is a vector of varying-intercept, $X_i$ is a matrix of Brazilian municipalities random effects, $\theta$ is a vector of controls, and $Z_i$ an array of control variables for the case $i$. The error term is denoted by $ε_i$. We fit a Bayesian model with rstanarm (Goodrich, 2023) with default weakly informative priors on parameters (Gelman et. al., 2008).
 
 
 The table below presents estimates for the causal effect on the treated units regarding the change in completion rates before and after the project.
 
-```{r balancing process,  message=FALSE, echo=FALSE}
+```{r prep data matching,  message=FALSE, echo=FALSE}
 
 aux_muni1 <- aux_muni %>%
   mutate(name_muni1 = tolower(iconv(name_muni, "UTF-8",  "ASCII//TRANSLIT")))
@@ -335,119 +334,175 @@ df_balancing_aux <- obras_inicio_projeto_ot %>%
          tipo_do_projeto = ifelse(grepl("Bloco Estrutural" ,tipo_do_projeto),
                                   "Projeto Tipo B ou C - Bloco Estrutural", tipo_do_projeto))
 
-df_balancing_aux %>%
-  group_by(tipo_do_projeto) %>%
-  summarise(n())
+df_balancing_aux1 <- df_balancing_aux %>%
+  mutate(concluida_num = as.numeric(concluida))
 
-## pós projeto
-df_balancing_aux_post <- obras_inicio_projeto_ot %>%
-  mutate(municipio1 = tolower(iconv(municipio, "UTF-8",  "ASCII//TRANSLIT"))) %>%
-  inner_join(aux_muni1, by = join_by(municipio1  == name_muni1, uf == abbrev_state)) %>%
-  inner_join(ipea_final, by = join_by(code_muni == tcode)) %>%
-  mutate(indicator_ot = ifelse(is.na(indicator_ot), 0, indicator_ot),
-         perc_pea18 =pea18/populacao,
-         log_pop = log(populacao),
-         log_renda = log(rpc*populacao),
-         log_rpc = log(rpc))
-```
-Table (ref number) summarizes the main results of the regression. 
-
-```{r balancing check, message=FALSE, echo=FALSE}
-m.out <- matchit(indicator_ot ~ perc_pea18  + ext_pobres  + log_rpc + 
-                  p10_ricos_desigualdade + freq_escola_15_1 + analfabetismo +
-                  log_renda + log_pop + percentual_de_execucao + rede_de_ensino_publico + tipo_do_projeto , data = df_balancing,
-                 replace = TRUE, ratio = 3)
-
-summary(m.out)
-# summary(m.out, un=FALSE)
-# plot(m.out, type = "jitter", interactive = FALSE)
-# 
-# m.sum <- summary(m.out)
-# 
-# plot(m.sum, var.order = "unmatched")
-
-# #eQQ plot
-# plot(m.out, type = "qq", which.xs = ~ log_rpc + ext_pobres + p10_ricos_desigualdade)
-# plot(m.out, type = "qq", which.xs = ~ perc_pea18 + log_pop + + freq_escola_15_1)
-# 
-# #eCDF plot - black line is treated, gray is control
-# plot(m.out, type = "ecdf", which.xs = ~ log_rpc + ext_pobres + p10_ricos_desigualdade)
-# plot(m.out, type = "ecdf", which.xs = ~  perc_pea18 + log_pop + + freq_escola_15_1)
-# 
-# #density plot - black line is treated, gray is control
-# plot(m.out, type = "density", which.xs = ~ log_rpc + ext_pobres + p10_ricos_desigualdade)
-# plot(m.out, type = "density", which.xs = ~  perc_pea18 + log_pop + + freq_escola_15_1)
-
-
-# Full matching on a probit PS
-m.out2 <- matchit(indicator_ot ~ perc_pea18  + ext_pobres  + log_rpc + 
-                  p10_ricos_desigualdade + freq_escola_15_1 + analfabetismo +
-                  log_renda + log_pop, data = df_balancing,
-                 method = "full", distance = "glm", link = "probit")
-# summary(m.out2, un = FALSE)
-# m.sum2 <- summary(m.out2)
-# plot(m.sum2, var.order = "unmatched")
-
-## regression with matching
-
-m.data <- match.data(m.out2) %>%
-  dplyr::select(weights, code_muni, subclass ) %>%
-  inner_join(df_balancing_aux, by = "code_muni") %>%
-  mutate(indicator_ot = as.factor(indicator_ot))
-
-
-fit <- lm(concluida ~ indicator_ot + perc_pea18  + ext_pobres  + log_rpc + 
-                  p10_ricos_desigualdade + freq_escola_15_1 + analfabetismo +
-                  log_renda + log_pop, data = m.data, weights = weights)
-
-# avg_comparisons(fit,
-#                 variables = "indicator_ot",
-#                 vcov = ~ subclass,
-#                 newdata = subset(m.data, indicator_ot == 1),
-#                 wts = "weights") %>%
-#   gt()
-#   
-
-matching_data <- match.data(m.out2) %>%
-  dplyr::select(weights, code_muni, subclass)
+df_balancing_aux_se <- df_balancing_aux1 %>%
+  filter(uf.x %in% c("SP", "PR", "SP", "SC", "RS", "MG"))
 
 pre_dados <- df_balancing_aux %>%
   dplyr::select(id, concluida) %>%
   rename(concluida_pre = concluida) %>%
-  mutate(id = as.character(id))
+  mutate(id = as.numeric(id))
 
 
 data_pos <- obras_fim_seg_fase %>%
   mutate(municipio1 = tolower(iconv(municipio, "UTF-8",  "ASCII//TRANSLIT"))) %>%
   inner_join(aux_muni1, by = join_by(municipio1  == name_muni1, uf == abbrev_state)) %>%
   inner_join(ipea_final, by = join_by(code_muni == tcode)) %>%
-  mutate(indicator_ot = ifelse(is.na(indicator_ot), 0, indicator_ot),
-         perc_pea18 =pea18/populacao,
+  mutate(perc_pea18 =pea18/populacao,
          log_pop = log(populacao),
          log_renda = log(rpc*populacao),
          log_rpc = log(rpc)) %>%
-  inner_join(matching_data, by = "code_muni") %>%
   inner_join(pre_dados, by = "id") %>%
-  dplyr::filter(concluida_pre != concluida) %>%
-  mutate(concluida = as.numeric(concluida))
+  dplyr::filter(concluida_pre == FALSE) %>%
+  mutate(concluida_num = as.numeric(concluida))
 
+
+df_balancing_aux_post_se <- data_pos %>%
+  filter(uf.x %in% c("SP", "PR", "SP", "SC", "RS", "MG"))
+
+```
+
+Table (ref number) summarizes the main results of the regression. 
+
+```{r pscore, message=FALSE, echo=FALSE}
+
+# these are the no redundancy covariates
+covs.nr <- c('perc_pea18', 'ext_pobres', 'log_rpc', 'p10_ricos_desigualdade', 'freq_escola_15_1', 'analfabetismo',
+             'log_renda', 'log_pop', 'percentual_de_execucao', 'tipo_do_projeto')
+
+# pscore estimation formula with original covariates
+
+ps_spec <- formula(indicator_muni_ot ~ log_rpc  + ext_pobres + freq_escola_15_1 + analfabetismo +
+                     log_renda   +  p10_ricos_desigualdade +
+                       + percentual_de_execucao)
+
+# Estimation of pscores using stan_glm
+set.seed(1234)
+ps_fit_pre <- stan_glm(ps_spec, family=binomial(link='logit'), 
+                     data=df_balancing_aux_se, algorithm='optimizing', refresh=0, iter = 2000)
+
+
+set.seed(1234)
+ps_fit_pos <- stan_glm(ps_spec, family=binomial(link='logit'), 
+                     data=df_balancing_aux_post_se, algorithm='optimizing', refresh=0, iter = 2000)
+# extrqacting logit pscores
+pscores_pre <- apply(posterior_linpred(ps_fit_pre), 2, mean)
+
+pscores_pos <- apply(posterior_linpred(ps_fit_pos), 2, mean)
+
+# matching
+#matching without replacement, original formula
+
+matches_pre <- matching(z=df_balancing_aux_se$indicator_muni_ot, score=pscores_pre, replace=FALSE)
+matched_pre <- df_balancing_aux_se[matches$match.ind,]
+
+matches_pos <- matching(z=df_balancing_aux_post_se$indicator_muni_ot, score=pscores_pos, replace=FALSE)
+matched_pos <- df_balancing_aux_post_se[matches$match.ind,]
+
+
+```
+
+```{r fitting bayesian model, message=FALSE, echo=FALSE}
+
+te_spec_nr <- update(ps_spec, concluida_num ~ indicator_muni_ot + (1 | municipio) + .)
+
+#treatment effect without replacement
+
+set.seed(20)
+reg_ps_pre <- stan_lmer(te_spec_nr, data=df_balancing_aux_se[matches_pre$match.ind,])
+
+## After
+set.seed(20)
+reg_ps_pos <- stan_lmer(te_spec_nr, data=df_balancing_aux_post_se[matches_pos$match.ind,])
+
+summary(reg_ps_pre)['indicator_muni_ot', 1:5]
+summary(reg_ps_pos)['indicator_muni_ot', 1:5]
+
+```
+
+```{r table 2, echo=FALSE,  message=FALSE, results='asis'}
+# posterior draws
+
+##
+# Before
+##
+
+
+
+b1_pre_sims <- as.matrix(reg_ps_pre, 
+                     pars = "indicator_muni_ot")
+
+# Posterior mean and SD of treatment
+b1_mean_pre <- mean(b1_pre_sims) # posterior mean
+b1_sd_pre <- sd(b1_pre_sims)       # posterior SD
+
+
+# Posterior median and 95% credible interval
+b1_quant_pre <- quantile(b1_pre_sims,   probs = c(0.025, 0.50, 0.975))
+
+b1_quant_pre <- data.frame(t(b1_quant_pre))
+names(b1_quant_pre) <- c("Q2.5", "Q50", "Q97.5")
+
+# Combine summary statistics of posterior simulation draws
+b1_df_pre_cred <- data.frame(variables = "ATT before project",
+                             post_mean = b1_mean_pre,
+                             post_sd = b1_sd_pre,
+                             b1_quant_pre[2], 
+                             b1_quant_pre[1],
+                             b1_quant_pre[3])
+
+
+
+##
+# After
+##
+b1_sims_after <- as.matrix(reg_ps_pos, 
+                     pars = "indicator_muni_ot")
   
-fit1 <- lm(concluida ~ indicator_ot + perc_pea18  + ext_pobres  + log_rpc + 
-                  p10_ricos_desigualdade + freq_escola_15_1 + analfabetismo +
-                  log_renda + log_pop, data = data_pos, weights = weights)
+# Compute mean, SD, median, and 95% credible interval of treatment
 
+# Posterior mean and SD of treatment
+b1_mean_after <- mean(b1_sims_after) # posterior mean
+b1_sd_after <- sd(b1_sims_after)       # posterior SD
 
+# Posterior median and 95% credible interval
+b1_quant_after <- quantile(b1_sims_after,   probs = c(0.025, 0.50, 0.975))
+
+b1_quant_after <- data.frame(t(b1_quant_after))
+names(b1_quant_after) <- c("Q2.5", "Q50", "Q97.5")
+
+# Combine summary statistics of posterior simulation draws
+b1_df_after_cred <- data.frame(variables = "ATT After project",
+                             post_mean = b1_mean_after,
+                             post_sd = b1_sd_after,
+                             b1_quant_after[2], 
+                             b1_quant_after[1],
+                             b1_quant_after[3])
+b1_df <- bind_rows(b1_df_pre_cred, b1_df_after_cred)
+
+b1_df %>% gt() %>%
+  tab_header(
+    title = "Effect of local OSB social monitoring on construction delivery rates") %>%
+  cols_label(
+    variables = "Variables",
+    post_mean = "Posterior mean",
+    post_sd = "Posterior sd",
+    Q50 = "Posterior median",
+    Q2.5 = "Posterior 2.5% CI",
+    Q97.5 = "Posterior 97.5% CI"
+  ) %>%
+  fmt_number(
+    columns = c(post_mean, post_sd, Q50, Q2.5, Q97.5 ),
+    decimals = 3,
+    use_seps = FALSE
+  ) %>%
+  tab_source_note(
+    source_note = "452 observations after matching, with municipalities of same states as participants of Obra Transparente."
+  ) 
 ```
 
-
-```{r tables 2, echo=FALSE,  message=FALSE, results='asis'}
-avg_comparisons(fit1,
-                variables = "indicator_ot",
-                vcov = ~ subclass,
-                newdata = subset(data_pos, indicator_ot == 1),
-                wts = "weights") %>%
-  gt()
-```
 
 ## Discussion of Results
 
@@ -487,6 +542,8 @@ https://www.transparencia.org.br/downloads/publicacoes/levantamentoobrasfederais
 Fairfield, T., & Charman, A. E. (2022). Social inquiry and Bayesian inference: Rethinking qualitative research. Cambridge University Press.
 
 Fox, J. A. (2015). Social accountability: what does the evidence really say?. World Development, 72, 346-361.
+
+Gelman, A., & Hill, J. (2006). Data analysis using regression and multilevel/hierarchical models. Cambridge university press.
 
 Gelman, A., Jakulin, A., Pittau, M. G., & Su, Y. S. (2008). A weakly informative default prior distribution for logistic and other regression models.
 
