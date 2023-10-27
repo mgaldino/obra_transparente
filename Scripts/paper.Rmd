@@ -32,12 +32,12 @@ library(marginaleffects)
 
 ```{r loading construction data,  message=FALSE, echo=FALSE}
 
-lista_cidades_ot <- c("Araucária", "Caçador", "Campo Mourão", "Cascavel", "Chapecó",
-                      "Foz do Iguaçu", "Goioerê", "Gravataí", "Guarapuava", "Imbituba", "Lajeado",
-                      "Limeira", "Palhoça", "Paranaguá", "Pelotas", "Ponta Grossa", "Santa Maria",
-                      "São Francisco do Sul", "São José dos Campos", "Taubaté", "Uberlândia")
-
-df_cidades_ot <- data.frame(municipio = lista_cidades_ot, indicator_ot = 1)
+# lista_cidades_ot <- c("Araucária", "Caçador", "Campo Mourão", "Cascavel", "Chapecó",
+#                       "Foz do Iguaçu", "Goioerê", "Gravataí", "Guarapuava", "Imbituba", "Lajeado",
+#                       "Limeira", "Palhoça", "Paranaguá", "Pelotas", "Ponta Grossa", "Santa Maria",
+#                       "São Francisco do Sul", "São José dos Campos", "Taubaté", "Uberlândia")
+# 
+# df_cidades_ot <- data.frame(municipio = lista_cidades_ot, indicator_ot = 1)
 
 load(here("obra_transparente", "Dados", "obras_inicio_projeto.Rdata"))
 load(here("obra_transparente", "Dados", "obras_fim_seg_fase.Rdata"))
@@ -49,6 +49,13 @@ simec23 <- fread(here("obra_transparente", "Dados", "simec 25-10-23 - simec.csv"
 # simec23 <- fread(here("Dados", "simec 25-10-23 - simec.csv"), encoding = "UTF-8")
 
 load(here("obra_transparente", "Dados", "obras_fim_seg_fase.Rdata"))
+
+df_cidades_ot <- read_excel("Dados/181114 - Situação obras_atual.xlsx", 
+                                           sheet = "SIMEC-Mai17", skip = 1) %>%
+  clean_names() %>%
+  filter(!is.na(id)) %>%
+  dplyr::select(id, municipio, uf, situacao2, levant_os_jun_17) %>%
+  mutate(indicator_ot = 1)
 ```
 
 ```{r loading-processing ipea data,  message=FALSE, echo=FALSE, cache=TRUE}
@@ -121,16 +128,24 @@ ipea_final <- ipea_idhm %>%
 ```{r processing data, echo=FALSE,  message=FALSE}
 
 obras_inicio_projeto_ot <- obras_inicio_projeto %>%
-  left_join(df_cidades_ot, by="municipio")
+  left_join(df_cidades_ot, by=join_by("municipio", "uf", "id"))
 
 obras_inicio_projeto_ot <- obras_inicio_projeto_ot %>%
   mutate(concluida = grepl("Concluída", situacao))
 
+aux_indicator_ot <- df_cidades_ot %>%
+  distinct(municipio, uf) %>%
+  mutate(indicator_muni_ot = 1)
+
+obras_inicio_projeto_ot <- obras_inicio_projeto_ot %>%
+  mutate(indicator_ot = ifelse(is.na(indicator_ot), 0, indicator_ot)) %>%
+  left_join(aux_indicator_ot, by = join_by("municipio", "uf")) %>%
+  mutate(indicator_muni_ot = ifelse(is.na(indicator_muni_ot), 0, indicator_muni_ot))
+  
 antes_projeto <- obras_inicio_projeto_ot %>%
-  group_by(indicator_ot, concluida) %>%
+  group_by(indicator_muni_ot, concluida) %>%
   summarise(contagem = n()) %>%
-  mutate(indicator_ot = ifelse(is.na(indicator_ot), 0, indicator_ot),
-         total = sum(contagem),
+  mutate(total = sum(contagem),
          perc = round(contagem/total, 2))
 
 antes_projeto <- antes_projeto %>%
@@ -141,13 +156,16 @@ antes_projeto <- antes_projeto %>%
 
 
 obras_fim_seg_fase <- obras_fim_seg_fase %>%
-  mutate(concluida = as.numeric(grepl("Concluída", situacao))) %>%
-  left_join(df_cidades_ot, by="municipio") %>%
-  mutate(indicator_ot = ifelse(is.na(indicator_ot), 0, indicator_ot))
+  mutate(concluida = as.numeric(grepl("Concluída", situacao)),
+         id = as.numeric(id)) %>%
+  left_join(df_cidades_ot, by=join_by("municipio", "uf", "id")) %>%
+  mutate(indicator_ot = ifelse(is.na(indicator_ot), 0, indicator_ot)) %>%
+  left_join(aux_indicator_ot, by = join_by("municipio", "uf")) %>%
+  mutate(indicator_muni_ot = ifelse(is.na(indicator_muni_ot), 0, indicator_muni_ot))
 
 
 depois_projeto <- obras_fim_seg_fase %>%
-  group_by(indicator_ot, concluida) %>%
+  group_by(indicator_muni_ot, concluida) %>%
   summarise(contagem = n()) %>%
   mutate(total = sum(contagem),
          perc = round(contagem/total, 2))
@@ -275,8 +293,12 @@ antes_projeto %>%
     title = "Percentage of finished fonstruction works before the project",
     subtitle = "Situation in August 2017") %>%
   cols_label(
-    indicator_ot = "Obra Transparente Indicator",
-    perc = "Percentage of finished constructions"
+    indicator_muni_ot = "Participating Municipalities in Obra Transparente ",
+    perc = "Percentage of Completed Constructions"
+  ) %>%
+    fmt_percent(
+    columns = perc,
+    decimals = 0
   )
 ```
 
@@ -298,9 +320,13 @@ df_balancing_aux <- obras_inicio_projeto_ot %>%
          perc_pea18 =pea18/populacao,
          log_pop = log(populacao),
          log_renda = log(rpc*populacao),
-         log_rpc = log(rpc))
-df_balancing <- df_balancing_aux %>%
-  distinct(code_muni, .keep_all = TRUE)
+         log_rpc = log(rpc),
+         tipo_do_projeto = ifelse(grepl("Bloco Estrutural" ,tipo_do_projeto),
+                                  "Projeto Tipo B ou C - Bloco Estrutural", tipo_do_projeto))
+
+df_balancing_aux %>%
+  group_by(tipo_do_projeto) %>%
+  summarise(n())
 
 ## pós projeto
 df_balancing_aux_post <- obras_inicio_projeto_ot %>%
@@ -318,10 +344,10 @@ df_balancing_aux_post <- obras_inicio_projeto_ot %>%
 ```{r balancing check, message=FALSE, echo=FALSE}
 m.out <- matchit(indicator_ot ~ perc_pea18  + ext_pobres  + log_rpc + 
                   p10_ricos_desigualdade + freq_escola_15_1 + analfabetismo +
-                  log_renda + log_pop, data = df_balancing,
+                  log_renda + log_pop + percentual_de_execucao + rede_de_ensino_publico + tipo_do_projeto , data = df_balancing,
                  replace = TRUE, ratio = 3)
 
-# summary(m.out)
+summary(m.out)
 # summary(m.out, un=FALSE)
 # plot(m.out, type = "jitter", interactive = FALSE)
 # 
