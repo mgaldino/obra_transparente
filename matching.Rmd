@@ -1,0 +1,37 @@
+---
+title: "Appendix"
+author: "Manoel Galdino"
+date: "2023-11-01"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+One of the key objectives of using matching is to achieve balance among treated and untreated. We provide evidence that our matching strategy was successful in achieving balancing. In the process, we explain how we performed balancing and our choice of restricting the comparison group of municipalities to the same states as the one involved in project Obra Transparente.
+
+
+
+```{r packege load appendix}
+library(rstan)
+library(arm)
+library(rstanarm)
+library(survey)
+library(broom)
+library(broom.mixed)
+library(MetBrewer)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r matching-loading-data, echo=FALSE, message=FALSE}
+load(here("Dados", "df_balancing_aux1.RData"))
+load(here("Dados", "df_balancing_aux_se.RData"))
+load(here("Dados", "df_balancing_aux_post_se.RData"))
+load(here("Dados", "data_pos.RData"))
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
