@@ -1,0 +1,897 @@
+% AER-Article.tex for AEA last revised 22 June 2011
+\documentclass[]{AEA}
+
+% The mathtime package uses a Times font instead of Computer Modern.
+% Uncomment the line below if you wish to use the mathtime package:
+%\usepackage[cmbold]{mathtime}
+% Note that miktex, by default, configures the mathtime package to use commercial fonts
+% which you may not have. If you would like to use mathtime but you are seeing error
+% messages about missing fonts (mtex.pfb, mtsy.pfb, or rmtmi.pfb) then please see
+% the technical support document at http://www.aeaweb.org/templates/technical_support.pdf
+% for instructions on fixing this problem.
+
+% Note: you may use either harvard or natbib (but not both) to provide a wider
+% variety of citation commands than latex supports natively. See below.
+
+% Uncomment the next line to use the natbib package with bibtex
+\usepackage{natbib}
+
+% Uncomment the next line to use the harvard package with bibtex
+%\usepackage[abbr]{harvard}
+
+% This command determines the leading (vertical space between lines) in draft mode
+% with 1.5 corresponding to "double" spacing.
+\draftSpacing{1.5}
+
+
+% tightlist command for lists without linebreak
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+
+
+% Pandoc citation processing
+\newlength{\cslhangindent}
+\setlength{\cslhangindent}{1.5em}
+\newlength{\csllabelwidth}
+\setlength{\csllabelwidth}{3em}
+\newlength{\cslentryspacingunit} % times entry-spacing
+\setlength{\cslentryspacingunit}{\parskip}
+% for Pandoc 2.8 to 2.10.1
+\newenvironment{cslreferences}%
+  {}%
+  {\par}
+% For Pandoc 2.11+
+\newenvironment{CSLReferences}[2] % #1 hanging-ident, #2 entry spacing
+ {% don't indent paragraphs
+  \setlength{\parindent}{0pt}
+  % turn on hanging indent if param 1 is 1
+  \ifodd #1
+  \let\oldpar\par
+  \def\par{\hangindent=\cslhangindent\oldpar}
+  \fi
+  % set entry spacing
+  \setlength{\parskip}{#2\cslentryspacingunit}
+ }%
+ {}
+\usepackage{calc}
+\newcommand{\CSLBlock}[1]{#1\hfill\break}
+\newcommand{\CSLLeftMargin}[1]{\parbox[t]{\csllabelwidth}{#1}}
+\newcommand{\CSLRightInline}[1]{\parbox[t]{\linewidth - \csllabelwidth}{#1}\break}
+\newcommand{\CSLIndent}[1]{\hspace{\cslhangindent}#1}
+
+\usepackage{booktabs}
+\usepackage{caption}
+\usepackage{longtable}
+\usepackage{colortbl}
+\usepackage{array}
+
+\usepackage{hyperref}
+
+\begin{document}
+
+
+\title{The Civil Society Organizations effect: A mixed-Methods analysis
+of bottom-up approaches in Brazilian public policy.}
+\shortTitle{The Civil Society Organizations effect}
+% \author{Author1 and Author2\thanks{Surname1: affiliation1, address1, email1.
+% Surname2: affiliation2, address2, email2. Acknowledgements}}
+
+
+\author{
+  Manoel Galdino\\
+  Bianca Vaz Mondo\\
+  Juliana Mari Sakai\\
+  Natália Paiva\thanks{
+  Galdino: Universidade de São Paulo,
+Brazil, \href{mailto:mgaldino@usp.br}{mgaldino@usp.br}.
+  Mondo: Government Transparency Institute - Germany, \href{mailto:}{}.
+  Sakai: Transparência Brasil - Brazil, \href{mailto:}{}.
+  Paiva: Alandar Consulting - Germany, \href{mailto:}{}.
+  We would like to thank all participants of project Obra Transparente,
+  Vanda Medeiros and the team of Transparência Brasil who worked in the
+  project or in evaluations of the project. The project was funded by an
+  UNDEF grant, which we also thank.
+}
+}
+
+\date{\today}
+\pubMonth{11}
+\pubYear{2023}
+\pubVolume{}
+\pubIssue{}
+\JEL{}
+\Keywords{accountability, Civil Society Organizations, mixed
+methods, community-driven development, public policy.}
+
+\begin{abstract}
+This paper examines the effect of bottom-up accountability on public
+service delivery. We differentiate between information-driven
+interventions and the mobilization and monitoring efforts of organized
+Civil Society Organizations (CSOs), and argue that the latter type of
+interventions can can drive significant policy change. The study
+evaluates the effectiveness of the Obra Transparente project by
+Brazilian NGO Transparência Brasil, engaging 21 local CSOs in South and
+Southeast Brazil. Our findings emphasize the importance of sustained,
+coordinated efforts by socially embedded CSOS. These efforts, involving
+direct engagement with municipal officials and ensuring that their
+complains cannot be ignored lead to more substantial outcomes when
+compared with citizens information-driven.
+\end{abstract}
+
+
+\maketitle
+
+\hypertarget{introduction}{%
+\subsection{Introduction}\label{introduction}}
+
+Accountability is a crucial element in democratic systems, ensuring the
+efficient delivery of public services (Besley and Ghatak 2003; Cameron
+2004; O'donnell 1998). Initially defined as the process of holding
+authorities responsible for their actions (Mulgan 2000; O'Loughlin
+1990), the literature has since broadened to include various oversight
+mechanisms for politicians and the bureaucracy. Some authors focus on
+formal institutions (O'donnell 2003; Kenney 2003), known as horizontal
+accountability, while others examine how politicians respond to voters,
+the media, and civil society organizations (Bertelli and Van Ryzin 2020;
+Relly 2012; Paul 1992), referred to as vertical accountability.
+
+Recent studies have highlighted the role of ``bottom-up accountability''
+(also known as social accountability, Fox, 2015), in which citizens
+receive information about public policies and use it for social control.
+The pioneering study `Power to the People' (Björkman and Svensson 2009),
+which demonstrated the impact of local community engagement in
+monitoring the provision of health services, inspired subsequent
+literature that tested similar interventions in different contexts.
+
+The mechanism would works like this: Constituents have firsthand
+information about the outcomes of local policies, giving citizens
+incentives to combat corruption that directly affects them. Since
+policymakers are sensitive to social feedback from their own communities
+(Serra 2012), bottom-up accountability could influence local public
+policies
+
+However, a series of recent studies have raised doubts about the
+effectiveness of ``bottom-up accountability'' strategies based on
+interventions aimed at increasing the monitoring capacity of ordinary
+citizens regarding public policies (Freire, Galdino, and Mignozzetti
+2020; Raffler, Posner, and Parkerson 2019; Fox 2015).
+
+Most of the interventions are tactical, in the sense that they involve
+providing information to non-organized citizens through technological
+means, such as sending SMS messages or delivering information via mobile
+apps. One key advantage of such interventions is that, if successful,
+they could rapidly reach thousands of people at a low cost, potentially
+having a significant impact when scaled to an entire country or even
+multiple countries.
+
+The disappointing results have cast doubts on the effectiveness of the
+bottom-up accountability strategy for improving the delivery of public
+services, reducing corruption, and enhancing government efficiency. Some
+authors (Fox 2015; Ankamah 2019) have suggested that social
+accountability without ``teeth,'' defined as the government's capacity
+to respond to citizens' voices, has limited impact.
+
+While it has been consistently shown that tactical interventions have,
+at best, a small, limited impact, it doesn't mean that voice without
+``teeth'' is an ineffective strategy. The argument in this study is that
+not all types of interventions that promote citizen's voices are the
+same.
+
+We argue that we need to differentiate between information-led tactical
+interventions and active mobilization and monitoring by Civil Society
+Organizations (CSOs). By their very nature, established CSOs are
+embedded in society and politics and can have a substantial impact on
+policy change (Gong and Xiao 2017; Joshi and Houtzager 2012).
+
+The paper argues that a missing feature in most of the literature is
+that these interventions should target CSOs instead of individual
+citizens, and ensure that the intervention enhances the ability of the
+CSOs to overcome their collective action problem (Mattoni and Odilla
+2021; Odilla 2023).
+
+The present paper provides evidence supporting this argument. We
+reassess the evidence provided by Freire, Galdino, and Mignozzetti
+(2020), considering a different intervention than the one they
+evaluated. They provided experimental evidence that a mobile app (Tá de
+Pé) made available to citizens did not improve the delivery of school
+and nursery construction works. Here, we assess the efficacy of a sister
+project, called ``Obra Transparente,'' also developed by the Brazilian
+NGO Transparência Brasil. This project targeted 21 local Civil Society
+Organizations in 21 municipalities in the South and Southeast regions of
+Brazil, with the aim of improving access to education by addressing
+mismanagement and delays in the construction of public schools and
+nurseries. Both projects were developed in parallel, with similar goals
+but achieved strikingly different results.
+
+The argument in the present study is that not all types of interventions
+that promote citizens' voice are the same. We argue that we need to
+differentiate between information-led tactical interventions and active
+mobilization and monitoring by Civil Society Organizations. By their
+very nature, established CSOs are embedded in society and politics and,
+as such, can have teeth of their own (Gong and Xiao 2017; Joshi and
+Houtzager 2012). It may be only that we need mobilization by organized
+civil society, in a structured way, for civil society voices to be heard
+with ``teeth''. Some studies have suggested that a key feature of
+successful change in public policies is the pressure of collectively
+organized agents (Mattoni and Odilla 2021; Odilla 2023). Collective
+action is a hard problem to be overcome and creating CSOs is one way to
+achieve this. We argue in this paper that a missing features of the
+tactical interventions assessed in most of the literature is that they
+should target CSOs instead of individual citizens, and make sure that
+the intervention increases the ability of the CSOs to attract and
+overcome their collective action problem.
+
+The ``Obra Transparente'' project consisted of developing a network of
+local CSOs to share experiences and information on monitoring the
+construction works, providing a technical support system for monitoring
+the process of constructing public schools and nurseries, and training
+on monitoring biddings, contracts, and constructions of public schools
+and nurseries.
+
+Our findings emphasize that it is the sustained and concerted efforts of
+organized civil society, such as repeated meetings with municipal
+officials, persistent follow-ups, and on-site visits, that lead to more
+significant outcomes, in contrast to interventions providing information
+and generating sporadic citizen actions.
+
+\hypertarget{the-project-obra-transparente}{%
+\subsection{The project Obra
+Transparente}\label{the-project-obra-transparente}}
+
+The project was initiated in May 2017 by Transparência Brasil (TB) to
+address delays in school and nursery construction projects funded by the
+federal government and carried out by municipal governments. TB
+partnered with Observatório Social do Brasil, an NGO coordinating a
+network of local (municipality-based) NGOs, to develop and disseminate a
+standardized methodology for local government oversight. The Obra
+Transparente project concluded on June 30, 2019.
+
+During the project, TB monitored construction plans, resource
+allocation, procurement processes, and work execution. They also tracked
+the monitoring and accountability procedures conducted by government
+bodies to ensure adherence to technical and legal guidelines.
+
+Transparência Brasil collaborated with the Controladoria Geral da União,
+a federal government agency responsible for overseeing federal public
+spending, to develop training materials and provide courses to a network
+of local CSOs. Courses reached 270 participants, with a mix of online
+and in-person modules over several weeks along the duration of the
+project. These modules covered topics related to public bidding,
+construction monitoring, and contracting procedures.
+
+\hypertarget{research-design-and-methods}{%
+\subsection{Research Design and
+Methods}\label{research-design-and-methods}}
+
+We employ an integrated inference approach (Humphreys and Jacobs 2023)
+to analyze qualitative data within the framework of causal queries. As
+this approach is relatively innovative within qualitative research,
+we'll provide a comprehensive explanation.
+
+The methodology outlined by (Humphreys and Jacobs 2023) mandates the
+creation of a causal model encoded in Directed Acyclic Graphs (DAGs), a
+framework developed by Pearl (2009). Bayesian inference, recently
+promoted in qualitative data analysis (Fairfield and Charman 2022),
+serves as the foundation for deriving quantitative estimates for causal
+queries constructed using the proposed DAG.
+
+In our current study, we investigate the impact of Civil Society
+Organization (CSO) monitoring on two aspects: the completion of
+construction works and the rectification of issues and irregularities
+found in construction facilities. Formally, the first research question
+relates to a causal relationship between monitoring (M) and completion
+(C), indicated by the DAG (M -\textgreater{} C). The second research
+query delves into whether monitoring (M) causes the fixing of issues
+(F), or the (DAG M -\textgreater{} F). To accommodate the qualitative
+nature of our variables, we treat them as binary.
+
+Within this approach, a given DAG allows us to pose causal queries,
+which can yield estimands like the average treatment effect (ATE) or
+types, which we explain below. Types are the focal estimands in our
+study.
+
+This approach hinges on the notion that each case can belong to a
+specific type, denoting different causal relationships. In our current
+investigation, let's focus on the (M -\textgreater{} C) DAG. To clarify
+what a type is, we'll employ the Potential Outcomes (PO) notation (Rubin
+2005; Imbens and Rubin 2015). Within the PO framework, every case has
+two potential outcomes: one when the treatment (in this case, CSO
+monitoring, M) is absent and another when the treatment is present. In
+simplified notation, if a city only completes construction works in the
+absence of monitoring, we express this in PO notation as C(1) = 0. If
+there is no monitoring (M = 0) and no completion, then we write C(0) =
+0. Conversely, if there is monitoring (M = 1) and completion, we write
+C(1) = 1, and C(0) = 1 if there is completion without monitoring.
+
+We can categorize a city into one of four types based on what happens
+when they do or do not receive the treatment (monitoring): Adverse (type
+``a''): A city that completes construction only if it doesn't receive
+the treatment (monitoring). Beneficial (type ``b''): A city that
+completes construction only if there is monitoring. Chronic (type
+``c''): Cities that never complete construction, regardless of
+monitoring. Destined (type ``d''): Cities that always complete
+construction, regardless of monitoring. The PO notation is instrumental
+here, as we can rewrite the types based on the following notation: Type
+``a'' is one in which the potential outcome is 0 if M = 1 and 1 if M =
+0. Therefore, we express it as \(\theta_{10}\), where the first
+subscript denotes the outcome when the treatment is 0, and the second
+denotes the outcome when the treatment is 1. We employ analogous
+notation for all other types: \(b = \theta_{01}\), \(c = \theta_{00}\),
+and \(d = \theta_{11}\).
+
+When analyzing a case study of what happened in a given municipality, we
+can use the data to answer, for example, the following causal query:
+what is the probability that the city if type ``b'', i.e, benefits from
+the monitoring and would have not completed the construction work if not
+for the monitoring of the local CSO?
+
+The advantage of this approach is that all assumptions and restrictions
+imposed to identify the parameters of interest are transparent. It also
+allows the user to update posterior probabilities based on qualitative
+data. One reason for this is that with Bayesian inference, we do not
+need to rely on asymptotic theory to make inferences. Thus, there is no
+need for a large-n study. Formally speaking, one can make causal queries
+without any data, based only on prior probabilities for the parameters.
+Obviously the answer to such causal queries will be vague enough to be
+almost useless. But the point is that, once you have a prior and a
+causal model, encoded in a DAG, you can answer causal queries. As one
+collects data (any data, be it qualitative or quantitative), one can
+make assumptions about the nature of the data (such as the Data
+Generating Process), and then update the model and provide new answers
+to the causal queries, which hopefully will be informative enough to be
+useful for the task at hand. And even when the model or hypothesis is
+not completely identified, it can be partially identified (Manski 2003),
+which is still a useful answer to causal queries.
+
+\hypertarget{data}{%
+\subsection{Data}\label{data}}
+
+The evidence gathered is primarily based on documented reports collected
+by Transparência Brasil and produced by the local OSBs over the course
+of the project. We also use evidence collected on semi-structured
+interviews and an online survey with representatives of the 21 CSOs
+conducted by an independent evaluator of the project. For the
+quantitative analysis, we use administrative data about construction
+works data by municipalities and socio-demographic data on
+municipalities. The questions asked in the survey as well the aggregate
+answered are presented in annex B.
+
+\hypertarget{case-studies}{%
+\subsection{Case Studies}\label{case-studies}}
+
+\hypertarget{delivery-of-the-construction-works}{%
+\subsubsection{Delivery of the construction
+works}\label{delivery-of-the-construction-works}}
+
+In our first case study, we highlight an impressive achievement in
+ensuring the completion of construction work. In Taubaté, four
+construction projects were underway, which the local OSB began
+monitoring as part of Obra Transparente. By the project's conclusion,
+their efforts played a crucial role in facilitating the successful
+delivery of these schools and nurseries to the city, ensuring they were
+ready for use in the field of education
+
+To put in perspective what was accomplished regarding the completion of
+all four projects, by the end of the project, of all 135 construction
+works planned for all 21 municipalities, only 25 were effectively
+delivered, a 18.5\% delivery rate. In Taubaté, before the monitoring by
+the local CSO, the delivery rate was zero. After that, the delivery rate
+was 100\% and one of the construction work was a previously paralyzed
+construction. According to a report by Transparência Brasil (Coelho,
+Galdino, and Sakai 2021), out of 771 stalled construction projects that
+were eventually completed, over 50\% of them took more than two years to
+be delivered and 25\% took three years or more. As we can see, the odds
+were against finishing the construction works.
+
+The local CSO monitoring the construction work in Taubaté did one of the
+best jobs among all 21 municipalities covered in the project. In fact,
+it was mostly the work of a single volunteer with support from the local
+OSB and Transparência Brazil throughout the project. She monitored four
+ongoing construction works on a periodic basis, she was very
+knowledgeable and insistent in demanding response from contractors and
+the local government. To give a single example of the quality of the
+social monitoring going on, in an email sent on 17th January of 2018 to
+the local government, the local OSB volunteer wrote: ``Fazendinha
+Daycare: a. construction log verified. There have been a few more
+construction workers on the site since December 15, 2017, but not
+enough, especially considering the extensive amount of work to be
+completed by the new delivery date in April 2018. b. (\ldots). c.~Lack
+of roof sealing, leading to water entering the classrooms (a situation
+that already existed on November 14, 2017)\ldots{}'' . She was by far
+the most knowledgeable and zealous volunteer of the whole project.
+
+All of the construction works were effectively finished and delivered by
+the end of the project, although overdue. One of them, a resumption of a
+then halted construction work, was delivered 2 months overdue. The
+remaining three were further delayed, but no amendments were made on
+prices, only deadlines.
+
+From a causal perspective, we are interested in what is called
+case-level causal attribution (Humphreys and Jacobs 2023), i.e, did the
+monitoring cause the delivery of the construction works? In other words,
+we are conditioning on the fact that M = 1 and C = 1, which constrains
+the possible types for Taubaté to be \(\theta^C_{1,1}\) ou
+\(\theta^C_{0,1}\). Assuming a simple model in which CSO monitoring
+causes the completion of works (M -\textgreater{} C), and with the eight
+within-case instances, we do the causal query. Our stimand of interest
+is the probability that Taubaté is a type \(\theta^D_{10}\).
+
+Assuming uniform priors, the probability that Taubaté is a type
+\(\theta^D_{10}\), i.e, it is a city in which the treatment has a
+positive effect is 65\%, with 95\% credibility interval around {[}23\%,
+95\%{]}. As we can see, a wide interval, due to the low sample size, and
+yet, a positive effect nonetheless with 95\% of certainty.
+
+What are the assumptions behind such a result? The main one is that we
+modeled the monitoring (the treatment) as-if random, which is obviously
+not true. The mere passage of time causes an increased probability of
+delivery of a construction work. We can also imagine other possible
+confounds. The way to model it in a DAG is to add an arrow from M to C
+and vice-versa (M \textless-\textgreater{} C). Now, the estimand of
+interest depends on the probability of the treatment (monitoring)
+causing also the outcome (Average Treatment Effect, ATE). We will not
+detail the derivation of the new stimand here (you can consult annex B),
+but the idea is similar to before: we are interested in the type of city
+in which there is a causal effect of the monitoring on the completion of
+a construction works of school and/or nurseries. The mean probability of
+Taubaté being of this type, assuming the model is true is 43\%, with
+95\% credibility intervals around {[}9\%, 80\%{]}. The interval is wider
+because we added the uncertainty of confounding. Nonetheless, it is
+unlikely that the positive effect found in the observational data is
+driven only due to the confounding variables.
+
+\hypertarget{preventing-problems-before-projects-started}{%
+\subsubsection{Preventing problems before projects
+started}\label{preventing-problems-before-projects-started}}
+
+The local OSB monitoring in Auraucária story is one when oversight
+arrives at the right moment to prevent a costly government procurement.
+
+In 2017, the Brazilian municipality of Araucária conducted bidding
+processes seeking to hire companies to build three nurseries. The
+project sent technical experts to the 3 planned construction sites,
+together with volunteers from the local Observatório, to check whether
+plans were consistent with the physical conditions observed on site. The
+experts' assessment was that high-cost contention walls included in the
+construction plans were unnecessary or could be replaced by low-cost
+solutions through adjustments. Originally, the contention walls would
+cost R\$ 1,577,338.57 (US\$ 419,504.9, at the nominal exchange rate in
+2019). The analysis was first directed to the local administration,
+suggesting changes to the construction plans, which were rejected. The
+bidding processes went on as initially planned. Subsequently, the
+experts' findings were submitted to the Brazilian Supreme Audit
+Institution, Tribunal de Contas da União (TCU), by Transparência Brasil
+and Observatório Social do Brazil (see annex 1). TCU recommended that
+the bidding process should be redone, and construction plans were to be
+redesigned, with more cost-effective solutions for the contention walls.
+In the new bidding process, their cost plummeted to R\$ 416,883.17 (USD
+110,873.2), a reduction of USD 308,631.7 --- or 74\% less. To give a
+sense of the impact on the city budget, the amount saved on these three
+constructions alone represents about 3\% of all capital investments of
+Araucária in 2018. In short, in a single municipality, the project
+resulted in savings higher than the cost of the entire project funded by
+the grantee UNDEF (US\$ 220,000.00).
+
+\hypertarget{fixing-defects-in-ongoing-projects}{%
+\subsubsection{Fixing defects in ongoing
+projects}\label{fixing-defects-in-ongoing-projects}}
+
+Another impact of the project was the correction of the irregularities
+and construction failures, improving the quality of the delivered
+construction work. During their monitoring activities, the OSBs found
+defects and issues, promptly reported them to municipality
+administration, which then acted in order to fix them. The project
+partners ended up substituting government inspectors and making up for
+their shortcomings in ensuring contract compliance through supervision.
+This was the case in both the four constructions in Taubaté (SP) and
+three that were going on in Foz do Iguaçu (SC). In both cases volunteers
+performed monitoring activities very frequently, which allowed for a
+thorough investigation and revealed a series of defects in projects and
+execution.
+
+\hypertarget{fixing-defects-in-finished-projects}{%
+\subsubsection{Fixing defects in finished
+projects}\label{fixing-defects-in-finished-projects}}
+
+In Palhoça (SC), is an example when oversight came too late. One of the
+daycares completed before the monitoring period started was delivered
+with a wall of perforated elements without proper grouting, with pieces
+that were already coming loose. The daycare was put into operation
+without addressing the issue, which led the staff to isolate the area to
+minimize the risk of injuries to the children. In other words, part of
+the building cannot be used due to a failure for which a solution should
+have already been demanded from the responsible company.
+
+In Goioerê, the story had a more happy ending. Volunteers visited an
+already delivered school building and noticed improperly installed
+windows, rendering them non-functional. A series of finishes were also
+lacking, such as grab bars and handles in accessible restrooms for
+persons with disabilities or reduced mobility. These shortcomings
+compromised adequate use of the building and exposed its users - mainly
+children - to potentially dangerous situations. These flaws were mostly
+corrected by the contractor after being reported by the local
+Observatório.
+
+\hypertarget{quantitative-observational-evidence}{%
+\subsection{Quantitative observational
+evidence}\label{quantitative-observational-evidence}}
+
+We have already observed qualitative evidence indicating that local OSB
+monitoring played a crucial role in expediting the completion of
+construction projects. Now, we present quantitative evidence regarding
+the impact of this monitoring on delivery rates.
+
+To do so, we collected data on school and nursery construction projects
+across the entire country, encompassing over two thousand municipalities
+and more than 14 thousand construction projects, spanning all phases
+from planning to execution and completion. The
+(\textbf{ref?})(tab:table1) below provides descriptive statistics for
+these construction projects.
+
+When comparing ``treated'' and ``untreated'' units, there is difference
+between the groups, as show below by the percentage of construction
+works within both groups before the project started.
+
+\setlength{\LTpost}{0mm}
+\begin{longtable}{rrr}
+\caption*{
+{\large Percentage of finished construction works before the project} \\ 
+{\small Situation in August 2017 and August 2019}
+} \\ 
+\toprule
+\# of participating cities & \% (Before Project) & \% (After Project) \\ 
+\midrule\addlinespace[2.5pt]
+0 & $49\%$ & $59\%$ \\ 
+1 & $29\%$ & $42\%$ \\ 
+\bottomrule
+\end{longtable}
+\begin{minipage}{\linewidth}
+Construction projects in states SP, MG, SC, PR and RS.\\
+\end{minipage}
+
+Our primary objective is to compare the project's effects on the rate of
+delivery. To estimate the Average Treatment Effect on the Treated (ATT),
+we employed a matching strategy (Ho et al. 2007; Rubin 1973) with a
+Bayesian logistic regression to create the propensity scores. Balance
+was successful after matching. We also applied the same procedure to
+pre-project data to ensure that there were no substantial differences
+between the treated and control groups.
+
+We estimate all models using the a varying-intercept regression equation
+(Gelman and Hill 2006):
+
+\[
+Y_i = \alpha + \beta_1 T_i + \gamma X_i + \theta Z_i + \epsilon_i
+\]
+
+Where \(i\) indexes the construction units, \(Y_i\) is \(1\) if a
+construction work is finished and \(0\) otherwise. \(\alpha\) represents
+the intercept, \(\beta\) denotes the average treatment effect on the
+treated (ATT), and \(T_i\) is a binary treatment indicator (whether the
+municipality is part of Obra Transparent or not). Symbol \(\gamma\) is a
+vector of varying intercepts, \(X_i\) is a matrix of random effects for
+Brazilian municipalities, \(\theta\) is a vector of control variables,
+and \(Z_i\) is an array of control variables for case \(i\). The error
+term is represented by \(\epsilon_i\). We employed a Bayesian model with
+rstanarm (Goodrich et al. 2023) with default weakly informative priors
+on the parameters (Gelman et al. 2008).
+
+The table below presents estimates for the causal effect on the treated
+units regarding the change in completion rates before and after the
+project.
+
+Table (insert ref number) summarizes the main results of the regression.
+The first row presents the results for the regression before the project
+started, where we expect the effect of the project to be zero, since it
+didn't exist. The second row shows the effect after the end of the
+project, when we expect the impact to be positive. The first column is
+an estimate of the posterior mean of the impact of the project and the
+second one is the posterior standard deviation of the estimate. We also
+present posterior median and \(2.5%
+\) and \(97.5%
+\) quantiles, in order to quantify the uncertainty around the estimates
+with a 95\% credibility interval.
+
+The hypothesis are corroborated, and we did not find an effect before
+the starting of the project, but found an effect aftet the end of the
+project. On average, a city that received the project Obra Transparente
+increases its delivery rate by almost 10\%. These results support our
+argument and the qualitative evidence we presented that sustained and
+costly bottom-up accountability improve public policies.
+
+\setlength{\LTpost}{0mm}
+\begin{longtable}{lrrrrr}
+\caption*{
+{\large Effect of local OSB social monitoring on construction delivery rates} \\ 
+{\small Posterior probabilities}
+} \\ 
+\toprule
+Variables & Mean & Sd & Median & 2.5\% CI & 97.5\% CI \\ 
+\midrule\addlinespace[2.5pt]
+ATT before project & $0.025$ & $0.042$ & $0.026$ & $-0.059$ & $0.108$ \\ 
+ATT After project & $0.099$ & $0.049$ & $0.099$ & $0.001$ & $0.194$ \\ 
+\bottomrule
+\end{longtable}
+\begin{minipage}{\linewidth}
+452 observations for the pre-treatment period and 320 observations for the post-treatment period, resulting from the matching procedure, and encompassing municipalities in the same states as municipalities of Obra Transparente\\
+\end{minipage}
+
+\hypertarget{discussion-of-results}{%
+\subsection{Discussion of Results}\label{discussion-of-results}}
+
+One of the reasons identified for some of the problems with the
+construction works is lack of qualified personnel from the government to
+monitor the contractor work. As a result, the local government does not
+properly oversight the work of contractors. And this is a task that
+requires technical expertise and is time consuming, involving going
+multiple times to the construction site, comparing the construction log
+with the schedule to assess if there is potential delay and what is
+specified in the contract, to assess if the materials used are correct,
+if everything demanded is being done etc.
+
+The fact that an intervention like Tá de Pé (Freire, Galdino, and
+Mignozzetti 2020), which provided information to citizens about
+construction work, but did not produce a meaningful impact does not mean
+that bottom up accountability does not have any effect. The evidence we
+gathered here, assessed with multiple methods, clearly shows that costly
+and consistent oversight by civil society can produce results that are
+quite impactful, be it increased rate of project completion, improved
+quality of the construction works or decreasing in governmental
+spending.
+
+The detection of evidence of procurement fraud cases also shows local
+administrations are not diligent enough in conducting procurement
+procedures, and the local partners of TB contributed to addressing that
+gap as well. Moreover, as federal audit agencies lack the capacity to
+adequately oversee and analyze the immense volume of contracting
+procedures conducted at the local level, the social monitoring resulted
+in the identification of high-risk cases that otherwise might not have
+been assessed by the competent bodies.
+
+\hypertarget{concluding-remarks}{%
+\subsection{Concluding Remarks}\label{concluding-remarks}}
+
+Accountability, as a fundamental element in democratic systems, plays a
+pivotal role in ensuring the efficient provision of public services.
+Recent studies have brought to light the concept of ``bottom-up
+accountability,'' where citizens receive information about public
+policies and utilize it to exert social control.
+
+While tactical interventions aimed at providing information to citizens
+have shown limited impact, it would be a mistake to dismiss the
+potential of citizen voices in governance entirely. Our research has
+differentiated between information-led tactical interventions and active
+mobilization and monitoring by Civil Society Organizations (CSOs). We
+argue that organized CSOs, deeply rooted in society and politics, hold
+the capacity to bring about substantial policy change.
+
+This paper provides evidence in support of this argument. By assessing
+the effectiveness of the ``Obra Transparente'' project developed by
+Transparência Brasil, we illustrate the significant role that organized
+CSOs can play in shaping government behavior and improving public
+service delivery. Unlike interventions solely focused on providing
+information, this project aimed at creating a network of local CSOs,
+offering technical support, and providing training on monitoring public
+school and nursery construction projects.
+
+Our findings underscore the importance of sustained, concerted efforts
+by organized civil society, including direct engagement with municipal
+officials, persistent follow-ups, and on-site visits. These endeavors
+yield more substantial outcomes compared to interventions that merely
+deliver information and generate sporadic citizen actions.
+
+In a world where accountability mechanisms continue to evolve, the role
+of organized civil society remains paramount. The ability to foster
+collective action, create informed oversight, and influence policy
+change is an essential aspect of accountable and effective democratic
+governance. The journey toward enhancing bottom-up accountability is
+ongoing, and our research contributes to a more comprehensive
+understanding of how it can be achieved through the mobilization of
+organized civil society.
+
+Sample figure:
+
+\begin{figure}
+Figure here.
+
+\caption{Caption for figure below.}
+\begin{figurenotes}
+Figure notes without optional leadin.
+\end{figurenotes}
+\begin{figurenotes}[Source]
+Figure notes with optional leadin (Source, in this case).
+\end{figurenotes}
+\end{figure}
+
+Sample table:
+
+\begin{table}
+\caption{Caption for table above.}
+
+\begin{tabular}{lll}
+& Heading 1 & Heading 2 \\
+Row 1 & 1 & 2 \\
+Row 2 & 3 & 4%
+\end{tabular}
+\begin{tablenotes}
+Table notes environment without optional leadin.
+\end{tablenotes}
+\begin{tablenotes}[Source]
+Table notes environment with optional leadin (Source, in this case).
+\end{tablenotes}
+\end{table}
+
+\hypertarget{references}{%
+\subsection{References}\label{references}}
+
+\bibliographystyle{aea}
+\bibliography{references}
+
+\% The appendix command is issued once, prior to all appendices, if any.
+\appendix
+
+\section{Mathematical Appendix}
+
+\hypertarget{refs}{}
+\begin{CSLReferences}{1}{0}
+\leavevmode\vadjust pre{\hypertarget{ref-ankamah_2019}{}}%
+Ankamah, Samuel Siebie. 2019. {``Why Do {`Teeth'} Need {`Voice'}? {The}
+Case of Anti-Corruption Agencies in Three {Australian} States.''}
+\emph{Australian Journal of Public Administration} 78 (4): 481--96.
+
+\leavevmode\vadjust pre{\hypertarget{ref-bertelli_2020}{}}%
+Bertelli, Anthony M., and Gregg G. Van Ryzin. 2020. {``Heuristics and
+Political Accountability in Complex Governance: {An} Experimental
+Test.''} \emph{Research \& Politics} 7 (3): 2053168020950080.
+\url{https://doi.org/10.1177/2053168020950080}.
+
+\leavevmode\vadjust pre{\hypertarget{ref-besley_2003}{}}%
+Besley, Timothy, and Maitreesh Ghatak. 2003. {``Incentives, Choice, and
+Accountability in the Provision of Public Services.''} \emph{Oxford
+Review of Economic Policy} 19 (2): 235--49.
+
+\leavevmode\vadjust pre{\hypertarget{ref-bjorkman_2009}{}}%
+Björkman, Martina, and Jakob Svensson. 2009. {``Power to the People:
+Evidence from a Randomized Field Experiment on Community-Based
+Monitoring in {Uganda}.''} \emph{The Quarterly Journal of Economics} 124
+(2): 735--69.
+
+\leavevmode\vadjust pre{\hypertarget{ref-cameron_2004}{}}%
+Cameron, Wayne. 2004. {``Public Accountability: {Effectiveness}, Equity,
+Ethics.''} \emph{Australian Journal of Public Administration} 63 (4):
+59--67.
+
+\leavevmode\vadjust pre{\hypertarget{ref-coelho_etal2021}{}}%
+Coelho, Jonas, Manoel Galdino, and Juliana Sakai. 2021.
+{``{Levantamento: Obras federais paralisadas de creches e escolas com
+maiores chances de serem concluídas}.''}
+
+\leavevmode\vadjust pre{\hypertarget{ref-fairfield_2022}{}}%
+Fairfield, Tasha, and Andrew E. Charman. 2022. \emph{Social Inquiry and
+{Bayesian} Inference: {Rethinking} Qualitative Research}. {Cambridge
+University Press}.
+
+\leavevmode\vadjust pre{\hypertarget{ref-fox_2015}{}}%
+Fox, Jonathan A. 2015. {``Social Accountability: What Does the Evidence
+Really Say?''} \emph{World Development} 72: 346--61.
+
+\leavevmode\vadjust pre{\hypertarget{ref-freire_etal2020}{}}%
+Freire, Danilo, Manoel Galdino, and Umberto Mignozzetti. 2020.
+{``Bottom-up Accountability and Public Service Provision: {Evidence}
+from a Field Experiment in {Brazil}.''} \emph{Research \& Politics} 7
+(2): 1--8. \url{https://doi.org/10.1177/2053168020914444}.
+
+\leavevmode\vadjust pre{\hypertarget{ref-gelman_2006}{}}%
+Gelman, Andrew, and Jennifer Hill. 2006. \emph{Data Analysis Using
+Regression and Multilevel/Hierarchical Models}. {Cambridge university
+press}.
+
+\leavevmode\vadjust pre{\hypertarget{ref-gelman_etal2008}{}}%
+Gelman, Andrew, Aleks Jakulin, Maria Grazia Pittau, and Yu-Sung Su.
+2008. {``A Weakly Informative Default Prior Distribution for Logistic
+and Other Regression Models.''}
+
+\leavevmode\vadjust pre{\hypertarget{ref-gong_2017}{}}%
+Gong, Ting, and Hanyu Xiao. 2017. {``Socially Embedded Anti-Corruption
+Governance: {Evidence} from {Hong Kong}.''} \emph{Public Administration
+and Development} 37 (3): 176--90.
+
+\leavevmode\vadjust pre{\hypertarget{ref-goodrich_etal2023}{}}%
+Goodrich, Ben, Jonah Gabry, Imad Ali, and Sam Brilleman. 2023.
+{``Rstanarm: {Bayesian} Applied Regression Modeling via {Stan}.''}
+\emph{R Package Version} 2 (26.1).
+
+\leavevmode\vadjust pre{\hypertarget{ref-ho_etal2007}{}}%
+Ho, Daniel E., Kosuke Imai, Gary King, and Elizabeth A. Stuart. 2007.
+{``Matching as Nonparametric Preprocessing for Reducing Model Dependence
+in Parametric Causal Inference.''} \emph{Political Analysis} 15 (3):
+199--236.
+
+\leavevmode\vadjust pre{\hypertarget{ref-humphreys_2023}{}}%
+Humphreys, Macartan, and Alan M. Jacobs. 2023. \emph{{INTEGRATED
+INFERENCES}: {Causal Models} for {Qualitative} and {Mixed-method
+Research}}. {CAMBRIDGE University Press}.
+
+\leavevmode\vadjust pre{\hypertarget{ref-imbens_2015}{}}%
+Imbens, Guido W., and Donald B. Rubin. 2015. \emph{Causal Inference in
+Statistics, Social, and Biomedical Sciences}. {Cambridge University
+Press}.
+
+\leavevmode\vadjust pre{\hypertarget{ref-joshi_2012}{}}%
+Joshi, Anuradha, and Peter P. Houtzager. 2012. {``Widgets or Watchdogs?
+{Conceptual} Explorations in Social Accountability.''} \emph{Public
+Management Review} 14 (2): 145--62.
+
+\leavevmode\vadjust pre{\hypertarget{ref-kenney_2003}{}}%
+Kenney, Charles D. 2003. {``Horizontal Accountability: Concepts and
+Conflicts.''} In \emph{Democratic {Accountability} in {Latin America}},
+55--76. {Scott Mainwaring \& Christopher Welna}.
+
+\leavevmode\vadjust pre{\hypertarget{ref-manski_2003}{}}%
+Manski, Charles F. 2003. \emph{Partial Identification of Probability
+Distributions}. Vol. 5. {Springer}.
+
+\leavevmode\vadjust pre{\hypertarget{ref-mattoni_2021}{}}%
+Mattoni, Alice, and Fernanda Odilla. 2021. {``Digital {Media},
+{Activism}, and {Social Movements}' {Outcomes} in the {Policy Arena}.
+{The Case} of {Two Anti-Corruption Mobilizations} in {Brazil}.''}
+\emph{Partecipazione e Conflitto} 14 (3): 1127--50.
+
+\leavevmode\vadjust pre{\hypertarget{ref-mulgan_2000}{}}%
+Mulgan, Richard. 2000. {``{`{Accountability}'}: An Ever-Expanding
+Concept?''} \emph{Public Administration} 78 (3): 555--73.
+
+\leavevmode\vadjust pre{\hypertarget{ref-odonnell_1998}{}}%
+O'donnell, Guillermo. 1998. {``Horizontal Accountability in New
+Democracies.''} \emph{J. Democracy} 9: 112.
+
+\leavevmode\vadjust pre{\hypertarget{ref-odonnell_2003}{}}%
+---------. 2003. {``Horizontal Accountability: {The} Legal
+{Institutionalization} of {Mistrust}.''} In \emph{Democratic
+{Accountability} in {Latin America}}, 34:34--54. {Scott Mainwaring \&
+Christopher Welna}.
+
+\leavevmode\vadjust pre{\hypertarget{ref-oloughlin_1990}{}}%
+O'Loughlin, Michael G. 1990. {``What Is Bureaucratic Accountability and
+How Can We Measure It?''} \emph{Administration \& Society} 22 (3):
+275--302.
+
+\leavevmode\vadjust pre{\hypertarget{ref-odilla_2023}{}}%
+Odilla, Fernanda. 2023. {``Bots Against Corruption: {Exploring} the
+Benefits and Limitations of {AI-based} Anti-Corruption Technology.''}
+\emph{Crime, Law and Social Change}, 1--44.
+
+\leavevmode\vadjust pre{\hypertarget{ref-paul_1992}{}}%
+Paul, Samuel. 1992. {``Accountability in Public Services: Exit, Voice
+and Control.''} \emph{World Development} 20 (7): 1047--60.
+
+\leavevmode\vadjust pre{\hypertarget{ref-raffler_etal2019}{}}%
+Raffler, Pia, Daniel N. Posner, and Doug Parkerson. 2019. {``The
+Weakness of Bottom-up Accountability: Experimental Evidence from the
+{Ugandan} Health Sector.''} \emph{Los Angeles: Innovations for Poverty
+Action}.
+
+\leavevmode\vadjust pre{\hypertarget{ref-relly_2012}{}}%
+Relly, Jeannine E. 2012. {``Examining a Model of Vertical
+Accountability: {A} Cross-National Study of the Influence of Information
+Access on the Control of Corruption.''} \emph{Government Information
+Quarterly} 29 (3): 335--45.
+
+\leavevmode\vadjust pre{\hypertarget{ref-rubin_1973}{}}%
+Rubin, Donald B. 1973. {``Matching to Remove Bias in Observational
+Studies.''} \emph{Biometrics}, 159--83.
+
+\leavevmode\vadjust pre{\hypertarget{ref-rubin_2005}{}}%
+---------. 2005. {``Causal Inference Using Potential Outcomes: {Design},
+Modeling, Decisions.''} \emph{Journal of the American Statistical
+Association} 100 (469): 322--31.
+
+\leavevmode\vadjust pre{\hypertarget{ref-serra_2012}{}}%
+Serra, Danila. 2012. {``Combining Top-down and Bottom-up Accountability:
+Evidence from a Bribery Experiment.''} \emph{The Journal of Law,
+Economics, \& Organization} 28 (3): 569--87.
+
+\end{CSLReferences}
+
+
+\end{document}
