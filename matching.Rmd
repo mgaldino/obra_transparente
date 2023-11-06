@@ -2,18 +2,18 @@
 title: "Appendix"
 author: "Manoel Galdino"
 date: "2023-11-01"
-output: pdf_document
+output: bookdown::pdf_document2
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
+One of the key objectives of using matching is to achieve balance among treated and untreated. We provide evidence that our matching strategy was successful in achieving balancing.
 
-One of the key objectives of using matching is to achieve balance among treated and untreated. We provide evidence that our matching strategy was successful in achieving balancing. In the process, we explain how we performed balancing and our choice of restricting the comparison group of municipalities to the same states as the one involved in project Obra Transparente.
+Since project Obra Transparente happened in five states in the South and Southeast of Brazil (São Paulo, Minas Gerais, Paraná, Santa Catarina and Rio Grande do Sul), re restricted the sample of projects to these states.
 
+We performed nearest neighbor propensity score matching, based on propensity scores computed with Bayesian logistic regression with weakly informative priors.
 
+The pre-treatment variables used are percentage of poor people in the city (2010 census data), the logarithm of per capita income (2010 census data), percentage of income appropriated by the 10% households with higher per capita income (2010 census data), rate of school frequency among youth (between 15 and 17 years old, 2010 census data), illiteracy rate (2010 census data), log of GDP (2010 census data), log of population (2010 census data), and percentage of construction execution (Minister of Education - FNDE data, collected in may 2017).
 
-```{r packege load appendix}
+```{r package load appendix, echo=FALSE, message=FALSE}
 library(rstan)
 library(arm)
 library(rstanarm)
@@ -21,11 +21,12 @@ library(survey)
 library(broom)
 library(broom.mixed)
 library(MetBrewer)
+library(here)
+library(tidyverse)
 ```
 
-## Including Plots
 
-You can also embed plots, for example:
+
 
 ```{r matching-loading-data, echo=FALSE, message=FALSE}
 load(here("Dados", "df_balancing_aux1.RData"))
@@ -34,4 +35,169 @@ load(here("Dados", "df_balancing_aux_post_se.RData"))
 load(here("Dados", "data_pos.RData"))
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+```{r matching-processing, echo=FALSE, message=FALSE, cache = TRUE}
+
+# pscore estimation
+
+ps_spec <- formula(indicator_muni_ot ~ log_rpc  + ext_pobres + freq_escola_15_1 + analfabetismo + log_renda   +  p10_ricos_desigualdade + percentual_de_execucao)
+
+######
+# pre project
+#####
+
+# Estimation of pscores using stan_glm
+set.seed(1234)
+ps_fit_pre <- stan_glm(ps_spec, family=binomial(link='logit'), 
+                     data=df_balancing_aux_se, algorithm='optimizing', refresh=0, iter = 2000)
+
+# extracting logit pscores
+pscores_pre <- apply(posterior_linpred(ps_fit_pre), 2, mean)
+
+df_balancing_aux_se <- df_balancing_aux_se %>%
+  mutate(pscores_pre = pscores_pre)
+
+# visualization
+isfahan <- MetBrewer::met.brewer("Isfahan1")
+
+# pre-matching
+pre_project_pre_matching_plot <- ggplot() +
+  geom_histogram(data = filter(df_balancing_aux_se, indicator_muni_ot == 1),
+                 bins = 50, aes(x = pscores_pre ),
+                 fill = isfahan[2]) +
+  geom_histogram(data = filter(df_balancing_aux_se, indicator_muni_ot == 0),
+                 bins = 50, aes(x = pscores_pre, y = -after_stat(count)),
+                 fill = isfahan[6]) +
+  geom_hline(yintercept = 0) +
+  annotate(geom = "label", x = -15, y = 40, label = "Treated",
+           fill = isfahan[2], color = "white", hjust = 0) +
+  annotate(geom = "label", x = -15, y = -100, label = "Untreated",
+           fill = isfahan[6], color = "white", hjust = 0) +
+  coord_cartesian(xlim = c(-20, 0), ylim = c(-700, 80)) +
+  labs(x = "Propensity", y = "Relative Freq.")
+
+#matching without replacement, original formula
+matches_pre <- matching(z=df_balancing_aux_se$indicator_muni_ot, score=pscores_pre, replace=FALSE)
+
+matched_pre <- df_balancing_aux_se[matches_pre$match.ind,]
+
+# matched_pre <- matched_pre %>%
+#   mutate(pscores_pre = pscores_pre[matches_pre$match.ind])
+
+# post-matching
+pre_project_post_matching_plot <- ggplot() +
+  geom_histogram(data = filter(matched_pre, indicator_muni_ot == 1),
+                 bins = 50, aes(x = pscores_pre ),
+                 fill = isfahan[2]) +
+  geom_histogram(data = filter(matched_pre, indicator_muni_ot == 0),
+                 bins = 50, aes(x = pscores_pre, y = -after_stat(count)),
+                 fill = isfahan[6]) +
+  geom_hline(yintercept = 0) +
+  annotate(geom = "label", x = -5, y = 20, label = "Treated",
+           fill = isfahan[2], color = "white", hjust = 0) +
+  annotate(geom = "label", x = -5, y = -25, label = "Untreated",
+           fill = isfahan[6], color = "white", hjust = 0) +
+  coord_cartesian(xlim = c(-6, 0), ylim = c(-50, 60)) +
+  labs(x = "Propensity", y = "Relative Freq.")
+
+######
+# Post project
+#####
+
+set.seed(1234)
+ps_fit_pos <- stan_glm(ps_spec, family=binomial(link='logit'), 
+                     data=df_balancing_aux_post_se, algorithm='optimizing', refresh=0, iter = 2000)
+
+# extracting logit pscores
+pscores_pos <- apply(posterior_linpred(ps_fit_pos), 2, mean)
+
+df_balancing_aux_post_se <- df_balancing_aux_post_se %>%
+  mutate(pscores_pos = pscores_pos)
+
+# pre-matching
+post_project_pre_matching_plot <- ggplot() +
+  geom_histogram(data = filter(df_balancing_aux_post_se,
+                               indicator_muni_ot == 1),
+                 bins = 50, aes(x = pscores_pos ),
+                 fill = isfahan[2]) +
+  geom_histogram(data = filter(df_balancing_aux_post_se,
+                               indicator_muni_ot == 0),
+                 bins = 50, aes(x = pscores_pos, y = -after_stat(count)),
+                 fill = isfahan[6]) +
+  geom_hline(yintercept = 0) +
+  annotate(geom = "label", x = -15, y = 20, label = "Treated",
+           fill = isfahan[2], color = "white", hjust = 0) +
+  annotate(geom = "label", x = -15, y = -40, label = "Untreated",
+           fill = isfahan[6], color = "white", hjust = 0) +
+  coord_cartesian(xlim = c(-20, 0), ylim = c(-350, 70)) +
+  labs(x = "Propensity", y = "Relative Freq.")
+
+#matching without replacement, original formula
+matches_post <- matching(z=df_balancing_aux_post_se$indicator_muni_ot, score=pscores_pos, replace=FALSE)
+
+matched_post <- df_balancing_aux_post_se[matches_post$match.ind,]
+
+# matched_post <- matched_post %>%
+#   mutate(pscores_pos1 = pscores_pos[matches_post$match.ind])
+
+# visualization
+
+# balance after matching
+post_project_post_matching_plot <- ggplot() +
+  geom_histogram(data = filter(matched_post, indicator_muni_ot == 1),
+                 bins = 50, aes(x = pscores_pos ),
+                 fill = isfahan[2]) +
+  geom_histogram(data = filter(matched_post, indicator_muni_ot == 0),
+                 bins = 50, aes(x = pscores_pos, y = -after_stat(count)),
+                 fill = isfahan[6]) +
+  geom_hline(yintercept = 0) +
+  annotate(geom = "label", x = -5, y = 10, label = "Treated",
+           fill = isfahan[2], color = "white", hjust = 0) +
+  annotate(geom = "label", x = -5, y = -10, label = "Untreated",
+           fill = isfahan[6], color = "white", hjust = 0) +
+ # scale_y_continuous(label = abs) +
+  coord_cartesian(xlim = c(-6, 0), ylim = c(-25, 25)) +
+  labs(x = "Propensity", y = "Relative Freq.")
+
+```
+
+## Balance
+
+We performed two analysis in the main document, firstly, a regression with data before the proejct started, as a placebo test. 
+
+```{r balance-table1, fig.cap="Imbalance before matching", echo=FALSE, message=FALSE}
+# covs_nr <- c('ext_pobres', 'log_rpc', 'p10_ricos_desigualdade', 'freq_escola_15_1', 'analfabetismo', 'log_renda', 'log_pop', 'percentual_de_execucao')
+# 
+# df_balance_check <- df_balancing_aux_se %>%
+#   dplyr::select(all_of(c(covs_nr, "indicator_muni_ot")))
+# 
+# matched_pre_check <- matched_pre %>%
+#   dplyr::select(all_of(c(covs_nr, "indicator_muni_ot")))
+#   
+# b_stats <- balance(df_balance_check, df_balance_check$indicator_muni_ot , matches_pre$cnts)
+# 
+# b_stats %>%
+#   gt()
+
+```
+
+
+
+```{r balance-plot1, fig.cap="Balance pre-matching before the project started.", echo=FALSE}
+print(pre_project_pre_matching_plot)
+```
+
+Figure \@ref(fig:balance-plot1) shows the huge imbalance before the matching strategy for the period before the project started and figure \@ref(fig:balance-plot2) shows the improvement in balance after the matching strategy.
+
+```{r balance-plot2, fig.cap="Balance post-matching before the project started.", echo=FALSE,}
+print(pre_project_post_matching_plot)
+```
+
+Next we show that balance was improved after the end of the project as well.Figure \@ref(fig:balance-plot3) and \@ref(fig:balance-plot4) presents balance before and after match for the data when treatment occurred.
+
+```{r balance-plot3, fig.cap="Balance pre-matching after the project started.", echo=FALSE}
+print(post_project_pre_matching_plot)
+```
+
+```{r balance-plot4, fig.cap="Balance post-matching after the project started.", echo=FALSE}
+print(post_project_post_matching_plot)
+```
