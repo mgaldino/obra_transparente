@@ -1,21 +1,22 @@
 ---
 title: "The Civil Society Organizations effect: A mixed-Methods analysis of bottom-up approaches in Brazilian public policy"
 date: "2023-10-26"
-output: bookdown::pdf_document2
 sansfont: Sans Serif
 fontsize: 12pt
 author:
-  - name: Manoel Galdino
-    affiliation: Universidade de São Paulo - Brazil.
-  - names: Juliana Sakai
-    affiliation: Transparência Brasil - Brazil
-  - names: Bianca Vaz Mondo
-    affiliation: Transparência Brasil - Brazil
-  - names: Natália Paiva
-    affiliation: Alandar Consulting - Brazil
+- name: Manoel Galdino^[Universidade de São Paulo - Brazil, mgaldino@usp.br]
+- names: Juliana Sakai^[Transparência Brasil - Brazil]
+- names: Bianca Vaz Mondo^[Government Transparency Institute - Germany]
+- names: Natália Paiva^[Alandar Consulting - Brazil]
+
 abstract: "This paper examines the effect of bottom-up accountability on public service delivery. We differentiate between information-driven interventions and the mobilization and monitoring efforts of organized Civil Society Organizations (CSOs), and argue that the latter type of interventions can can drive significant policy change. The study evaluates the effectiveness of the Obra Transparente project by Brazilian NGO Transparência Brasil, engaging 21 local CSOs in South and Southeast Brazil.  Our findings emphasize the importance of sustained, coordinated efforts by socially embedded CSOS. These efforts, involving direct engagement with municipal officials and ensuring that their complains cannot be ignored lead to more substantial outcomes when compared with citizens information-driven."
 keywords: "accountability, Civil Society Organizations, mixed methods, community-driven development, public policy."
 bibliography: OT_paper.bib
+output:
+    bookdown::pdf_document2:
+      base_format: rticles::sage_article
+
+
 ---
 
 ```{r setup, include=FALSE}
@@ -245,7 +246,7 @@ The advantage of this approach is that all assumptions and restrictions imposed 
 
 ## Data
 
-The evidence gathered is primarily based on documented reports collected by Transparência Brasil and produced by the local OSBs over the course of the project. We also use evidence collected on semi-structured interviews and an online survey with representatives of the 21 CSOs conducted by an independent evaluator of the project. For the quantitative analysis, we use administrative data about construction works data by municipalities and socio-demographic data on municipalities. The questions asked in the survey as well the aggregate answered are presented in annex A.
+The evidence gathered is primarily based on documented reports collected by Transparência Brasil and produced by the local OSBs over the course of the project. We also use evidence collected on semi-structured interviews and an online survey with representatives of the 21 CSOs conducted by an independent evaluator of the project. For the quantitative analysis, we use administrative data about construction works data by municipalities and socio-demographic data on municipalities. The questions asked in the survey as well the aggregate answered are presented in annex B.
 
 ## Case Studies
 
@@ -380,13 +381,6 @@ save(df_balancing_aux_se, file = here("Dados", "df_balancing_aux_se.RData"))
 save(df_balancing_aux_post_se, file = here("Dados", "df_balancing_aux_post_se.RData"))
 save(data_pos, file = here("Dados", "data_pos.RData"))
 ```
-
- 
-# these are the no redundancy covariates with and without state covariate
-covs.nr <- c('perc_pea18', 'ext_pobres', 'log_rpc', 'p10_ricos_desigualdade', 'freq_escola_15_1', 'analfabetismo',
-             'log_renda', 'log_pop', 'percentual_de_execucao', 'tipo_do_projeto')
-
-covs.nr.st <- c(covs.nr, "uf.x")
 
 Table (insert ref number) summarizes the main results of the regression. The first row presents the results for the regression before the project started, where we expect the effect of the project to be zero, since it didn't exist. The second row shows the effect after the end of the project, when we expect the impact to be positive. The first column is an estimate of the posterior mean of the impact of the project and the second one is the posterior standard deviation of the estimate. We also present posterior median and $2.5%$ and $97.5%$ quantiles, in order to quantify the uncertainty around the estimates with a 95% credibility interval.
 
