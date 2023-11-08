@@ -59,8 +59,8 @@ model_taubate <- make_model("M -> C") %>% set_restrictions(non_decreasing("M", "
 # model_taubate1 <- make_model("M -> C; M <-> C") %>% 
 #   set_restrictions(labels = list(M = "M0"), keep = TRUE) # preciso rule out C.01_M.0 e C.01_M.1# i.e., não tem adverso.
 
-model_taubate1 <- make_model("M -> C; M <-> C") %>% 
-  set_restrictions(labels = list(C = list("00", "01", "11")), keep = TRUE) # rule out C.10_M.0 e C.10_M.1# i.e., não tem adverso.
+model_taubate1 <- make_model("O -> M -> C; M <-> C") %>%
+  set_restrictions(non_decreasing("M", "C"), keep=T) # rule out C.10_M.0 e C.10_M.1# i.e., não tem adverso.
 
 
 
@@ -106,7 +106,7 @@ model_taubate %>%
   query_model("C[M=1] - C[M=0]", n_draws = 10000, case_level = T) %>%
   kable
 
-data_taubate  <- data.frame(M = c(0,0,0,0, 1, 1, 1, 1), C = c(0, 0, 0, 0, 1, 1, 1, 1))
+data_taubate  <- data.frame(O = rep(1, 8), M = c(0,0,0,0, 1, 1, 1, 1), C = c(0, 0, 0, 0, 1, 1, 1, 1))
 compact_data <-  collapse_data(data_taubate, model_taubate) 
 
 compact_data1 <-  collapse_data(data_taubate, model_taubate1)
@@ -120,6 +120,35 @@ updated$causal_types %>% data.frame() %>% glimpse()
 updated1$posterior_distribution %>% 
   data.frame() %>%
   glimpse()
+
+mydf1 <- updated1$posterior_distribution %>% 
+  data.frame() 
+
+mydf1 %>%
+  mutate(ate = C.01_M.01*M.01 + C.01_M.10*M.10) %>%
+  summarise(mean_ate = mean(ate),
+            sd_ate = sd(ate),
+            q.025 = quantile(ate, .025),
+            q.975 = quantile(ate, .975))
+
+mydf1 %>%
+  mutate(ate = C.11_M.1*M.1 + C.11_M.0*M.0) %>%
+  summarise(mean_ate = mean(ate),
+            sd_ate = sd(ate),
+            q.025 = quantile(ate, .025),
+            q.975 = quantile(ate, .975))
+
+mydf1 %>%
+  mutate(post_ratio = (C.01_M.1*M.1 + C.01_M.0*M.0)/(C.11_M.1*M.1 + C.11_M.0*M.0)) %>%
+  summarise(mean_ate = mean(post_ratio),
+            sd_ate = sd(post_ratio),
+            q.025 = quantile(post_ratio, .025),
+            q.975 = quantile(post_ratio, .975))
+
+mydf1 %>%
+  mutate(estimand1 = C.01_M.0*M.0 + C.01_M.1*M.1 - C.11_M.0*M.0 - C.11_M.1*M.1 ) %>%
+  summarise(media = mean(estimand1),
+            num_pos = sum(estimand1>0)/n())
 
 print(updated1$stan_objects)
 
@@ -136,11 +165,25 @@ updated1$posterior_distribution %>%
   data.frame() %>%
   ggplot(aes(C.01_M.1 - C.00_M.1)) + geom_histogram()
 
-mydf1 <- updated1$posterior_distribution %>% 
-  data.frame() 
+
 
 mydf1 %>%
-  mutate(ate = C.01_M.1*M.1 + C.01_M.0*M.0) %>%
+  mutate(ate = C.11_M.1*M.1 + C.11_M.0*M.0) %>%
+  summarise(mean_ate = mean(ate),
+            sd_ate = sd(ate),
+            q.025 = quantile(ate, .025),
+            q.975 = quantile(ate, .975))
+
+mydf1 %>%
+  mutate(ate = C.00_M.1*M.1 + C.00_M.0*M.0) %>%
+  summarise(mean_ate = mean(ate),
+            sd_ate = sd(ate),
+            q.025 = quantile(ate, .025),
+            q.975 = quantile(ate, .975))
+
+
+mydf1 %>%
+  mutate(ate = C.11_M.1*M.1) %>%
   summarise(mean_ate = mean(ate),
             sd_ate = sd(ate),
             q.025 = quantile(ate, .025),
@@ -155,7 +198,7 @@ mydf %>%
             sd_ate = sd(ate),
             q.025 = quantile(ate, .025),
             q.975 = quantile(ate, .975))
-updated %>%
+updated1 %>%
   query_model(query = list(ATE = "C[M=1] - C[M=0]", Share_positive = "C[M=1] > C[M=0]"),
               given = c(TRUE,  "C==1 & M==1"),
               using = c("posteriors"),
