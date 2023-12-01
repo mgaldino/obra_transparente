@@ -4,7 +4,7 @@ author: "Manoel Galdino"
 date: "2023-11-30"
 output: 
   bookdown::pdf_document2:
-    toc:false
+    figsintext : yes
 ---
 
 ```{r setup, include=FALSE}
@@ -18,6 +18,8 @@ knitr::opts_chunk$set(
 
 ```{r package loads}
 library(data.table)
+library(stargazer)
+library(fixest)
 library(here)
 library(janitor)
 library(lubridate)
@@ -28,6 +30,7 @@ library(ipeadatar)
 library(rstan)
 library(arm)
 library(rstanarm)
+library(brms)
 library(survey)
 library(broom)
 library(broom.mixed)
@@ -38,7 +41,7 @@ library(patchwork)
 
 ```
 
-## R Markdown
+# Appendix
 
 We utilized several data sources in our analysis, with the primary dataset for the quantitative analysis, encompassing the outcome variable, originating from a single source.
 
@@ -146,7 +149,11 @@ df1 %>%
 
 ```
 
-In the main analysis, we restricted the sample to municipalities in the same states where the Obra Transparente project occurred. Table \@ref(tab:basic-table-s) presents a situation similar to that of the entire country, albeit with a higher baseline (11 percentage points above the whole country).
+In the main analysis, we restricted the sample to municipalities in the same states where the Obra Transparente project occurred. The reason is that there is perfect multicolinearity between our treatment and seven other control variables (mesured at the municipality level) in the unrestricted sample (log of per capita income, school frequency, log of GDP, share of poor families, illiteracy rate, and an inequality measure). 
+
+We present simple descriptive statistics and visualizations to show that the change is similar in our outcome variable considering the restricted and unrestricted sample.
+
+Table \@ref(tab:basic-table-s) presents a situation similar to that of the entire country, albeit with a higher baseline (11 percentage points above the whole country).
 
 ```{r basic-table-s}
 obras_inicio_projeto_ot <- obras_inicio_projeto %>%
@@ -185,12 +192,12 @@ Figure \@ref(fig:plot) presents a comparison of completion rates between restric
 
 df1 <- df1 %>%
   rename(date = concluida) %>%
-  mutate(date = c("May 2017", "July 2019"),
+  mutate(date = c("05-17", "07-19"),
          perc = scales::percent(round(num_works/total, 2)))
 
 df2 <- df2 %>%
   rename(date = concluida) %>%
-  mutate(date = c("May 2017", "July 2019"),
+  mutate(date = c("05-17", "07-19"),
          perc = scales::percent(round(num_works/total, 2)))
 
 combined_df <- bind_rows(
@@ -220,7 +227,7 @@ ggplot(combined_df, aes(x = date, y = perc, color = date)) +
   theme_minimal() 
 ```
 
-# Imbalance 
+## Imbalance 
 
 The treatment is just a list of municipalities where the project occurred. To assess imbalance of treatment and control units, we used other metrics in the SIMEC data set (if a construction work is paralyzed or not, it it is in execution or not and percentage completed), since they are related to how hard it is to finish a construction.
 
@@ -239,7 +246,7 @@ imb_before_s <- obras_inicio_projeto %>%
             perc_paralyzed = num_paralyzed/num_works,
             perc_execution = num_execution/num_works,
             mean_execution = mean(percentage_executed)/100) %>%
-  mutate(date = "May 2017")
+  mutate(date = "05-17")
 
 imb_before <- obras_inicio_projeto %>%
   mutate(paralyzed = as.numeric(grepl("Paralisada", situacao)),
@@ -251,10 +258,10 @@ imb_before <- obras_inicio_projeto %>%
             perc_paralyzed = num_paralyzed/num_works,
             perc_execution = num_execution/num_works,
             mean_execution = mean(percentage_executed)/100) %>%
-  mutate(date = "May 2017")
+  mutate(date = "05-17")
 
 imb_after_s <- obras_fim_seg_fase %>%
-  dplyr::filter(uf %in% c("SP", "PR", "SP", "SC", "RS", "MG")) %>%
+  dplyr::filter(uf %in% c("SP", "PR", "SC", "RS", "MG")) %>%
   mutate(paralyzed = as.numeric(grepl("Paralisada", situacao)),
          execution = as.numeric(grepl("Execução", situacao)),
          percentage_executed = percentual_de_execucao) %>%
@@ -264,7 +271,7 @@ imb_after_s <- obras_fim_seg_fase %>%
             perc_paralyzed = num_paralyzed/num_works,
             perc_execution = num_execution/num_works,
             mean_execution = mean(percentage_executed)/100) %>%
-  mutate(date = "July 2019")
+  mutate(date = "07-19")
 
 imb_after <- obras_fim_seg_fase %>%
   mutate(paralyzed = as.numeric(grepl("Paralisada", situacao)),
@@ -276,7 +283,7 @@ imb_after <- obras_fim_seg_fase %>%
             perc_paralyzed = num_paralyzed/num_works,
             perc_execution = num_execution/num_works,
             mean_execution = mean(percentage_executed)/100) %>%
-  mutate(date = "July 2019")
+  mutate(date = "07-19")
 
 combined_df <- bind_rows(
   mutate(imb_before_s, Sample = "Restriced states"),
@@ -319,8 +326,6 @@ combined_plots <- plot_execution + plot_paralyzed + plot_mean_execution
 
 # Print the combined plots
 print(combined_plots)
-
-
 ```
 
 In any case, we also ran standard ols regression, adjusting for such variables, as a robustness check. 
@@ -392,7 +397,7 @@ ipea_final <- ipea_idhm %>%
   dplyr::select(-starts_with("code"))
 ```
 
-```{r fitting bayesian model, message=FALSE, echo=FALSE, cache = TRUE}
+```{r processing reg, message=FALSE, echo=FALSE}
 aux_indicator_ot <- df_cidades_ot %>%
   distinct(municipio, uf) %>%
   mutate(indicator_muni_ot = 1)
@@ -414,11 +419,11 @@ df_balancing_aux <- obras_inicio_projeto_ot %>%
          log_renda = log(rpc*populacao),
          log_rpc = log(rpc),
          tipo_do_projeto = ifelse(grepl("Bloco Estrutural" ,tipo_do_projeto),
-                                  "Projeto Tipo B ou C - Bloco Estrutural", tipo_do_projeto))
-
-df_balancing_aux1 <- df_balancing_aux %>%
+                                  "Projeto Tipo B ou C - Bloco Estrutural", tipo_do_projeto)) %>%
   mutate(concluida_num = as.numeric(concluida))
 
+df_balancing_aux1 <- df_balancing_aux  %>%
+  dplyr::filter(uf.x %in% c("SP", "MG", "RS", "PR", "SC"))
 
 pre_dados <- df_balancing_aux %>%
   dplyr::select(id, concluida) %>%
@@ -451,14 +456,30 @@ df_balancing_aux1 <- df_balancing_aux1 %>%
 te_spec_nr <- formula(concluida_num ~ log_rpc  + ext_pobres + freq_escola_15_1 + analfabetismo +
                      log_renda  +  p10_ricos_desigualdade + percentual_de_execucao + indicator_muni_ot + (1 | code_muni) + .)
 
-#treatment effect without replacement
+```
+
+Tables below presents results from standard, frequentist regression (ols, fixed effects, both with clustered standard errors) and Bayesian regression (linear model with varying intercept).
+
+```{r fitting, echo=FALSE, message=FALSE, results="asis"}
+
+# Simple linear regression
+fit_ols <- feols(concluida_num ~ indicator_muni_ot + log_rpc +
+                   ext_pobres + freq_escola_15_1 + analfabetismo + log_renda + p10_ricos_desigualdade + percentual_de_execucao, data = df_balancing_aux1, cluster = "code_muni" )
+
+fit_fixed <- feols(concluida_num ~ indicator_muni_ot + log_rpc + ext_pobres + freq_escola_15_1 + analfabetismo + log_renda + p10_ricos_desigualdade + percentual_de_execucao |code_muni, data = df_balancing_aux1, cluster = "code_muni")
+
+etable(list(fit_ols, fit_fixed), tex=TRUE)
+
 
 set.seed(120)
-reg_ps_pre <- stan_lmer(te_spec_nr, data=df_balancing_aux1, iter = 100)
+rstan_options(auto_write = TRUE)
+options(mc.cores = parallel::detectCores())
+# system.time(reg_ps_pre <- brm(te_spec_nr, data=df_balancing_aux1, iter = 100, cores = 4, chains = 4))
+# reg_ps_pre <- stan_lmer(te_spec_nr, data=df_balancing_aux1, iter = 100)
 
 ## After
-set.seed(120)
-reg_ps_pos <- stan_lmer(te_spec_nr, data=df_balancing_aux_post_se[matches_pos$match.ind,], iter = 4000, refresh=0)
+# set.seed(120)
+# reg_ps_pos <- stan_lmer(te_spec_nr, data=df_balancing_aux_post_se[matches_pos$match.ind,], iter = 4000, refresh=0)
 
 ```
 
@@ -469,79 +490,80 @@ reg_ps_pos <- stan_lmer(te_spec_nr, data=df_balancing_aux_post_se[matches_pos$ma
 # Before
 ##
 
-b1_pre_sims <- as.matrix(reg_ps_pre, 
-                     pars = "indicator_muni_ot")
+# b1_pre_sims <- as.matrix(reg_ps_pre, 
+#                      pars = "indicator_muni_ot")
 
 # Posterior mean and SD of treatment
-b1_mean_pre <- mean(b1_pre_sims) # posterior mean
-b1_sd_pre <- sd(b1_pre_sims)       # posterior SD
-
+# b1_mean_pre <- mean(b1_pre_sims) # posterior mean
+# b1_sd_pre <- sd(b1_pre_sims)       # posterior SD
+# 
 
 # Posterior median and 95% credible interval
-b1_quant_pre <- quantile(b1_pre_sims,   probs = c(0.025, 0.50, 0.975))
-
-b1_quant_pre <- data.frame(t(b1_quant_pre))
-names(b1_quant_pre) <- c("Q2.5", "Q50", "Q97.5")
+# b1_quant_pre <- quantile(b1_pre_sims,   probs = c(0.025, 0.50, 0.975))
+# 
+# b1_quant_pre <- data.frame(t(b1_quant_pre))
+# names(b1_quant_pre) <- c("Q2.5", "Q50", "Q97.5")
 
 # Combine summary statistics of posterior simulation draws
-b1_df_pre_cred <- data.frame(variables = "ATT before project",
-                             post_mean = b1_mean_pre,
-                             post_sd = b1_sd_pre,
-                             b1_quant_pre[2], 
-                             b1_quant_pre[1],
-                             b1_quant_pre[3])
-
+# b1_df_pre_cred <- data.frame(variables = "ATT before project",
+#                              post_mean = b1_mean_pre,
+#                              post_sd = b1_sd_pre,
+#                              b1_quant_pre[2], 
+#                              b1_quant_pre[1],
+#                              b1_quant_pre[3])
+# 
 
 
 ##
 # After
 ##
-b1_sims_after <- as.matrix(reg_ps_pos, 
-                     pars = "indicator_muni_ot")
-  
+# b1_sims_after <- as.matrix(reg_ps_pos, 
+#                      pars = "indicator_muni_ot")
+#   
 # Compute mean, SD, median, and 95% credible interval of treatment
 
 # Posterior mean and SD of treatment
-b1_mean_after <- mean(b1_sims_after) # posterior mean
-b1_sd_after <- sd(b1_sims_after)       # posterior SD
-
-# Posterior median and 95% credible interval
-b1_quant_after <- quantile(b1_sims_after,   probs = c(0.025, 0.50, 0.975))
-
-b1_quant_after <- data.frame(t(b1_quant_after))
-names(b1_quant_after) <- c("Q2.5", "Q50", "Q97.5")
+# b1_mean_after <- mean(b1_sims_after) # posterior mean
+# b1_sd_after <- sd(b1_sims_after)       # posterior SD
+# 
+# # Posterior median and 95% credible interval
+# b1_quant_after <- quantile(b1_sims_after,   probs = c(0.025, 0.50, 0.975))
+# 
+# b1_quant_after <- data.frame(t(b1_quant_after))
+# names(b1_quant_after) <- c("Q2.5", "Q50", "Q97.5")
 
 # Combine summary statistics of posterior simulation draws
-b1_df_after_cred <- data.frame(variables = "ATT After project",
-                             post_mean = b1_mean_after,
-                             post_sd = b1_sd_after,
-                             b1_quant_after[2], 
-                             b1_quant_after[1],
-                             b1_quant_after[3])
-b1_df <- bind_rows(b1_df_pre_cred, b1_df_after_cred)
+# b1_df_after_cred <- data.frame(variables = "ATT After project",
+#                              post_mean = b1_mean_after,
+#                              post_sd = b1_sd_after,
+#                              b1_quant_after[2], 
+#                              b1_quant_after[1],
+#                              b1_quant_after[3])
+# b1_df <- bind_rows(b1_df_pre_cred, b1_df_after_cred)
 ```
 
 ```{r table2, echo=FALSE,  message=FALSE, results='asis'}
 
-b1_df %>% gt() %>%
-  tab_header(
-    title = "Effect of local OSB social monitoring on construction delivery rates",
-    subtitle = "Posterior probabilities") %>%
-  cols_label(
-    variables = "Variables",
-    post_mean = "Mean",
-    post_sd = "Sd",
-    Q50 = "Median",
-    Q2.5 = "2.5% CI",
-    Q97.5 = "97.5% CI"
-  ) %>%
-  fmt_number(
-    columns = c(post_mean, post_sd, Q50, Q2.5, Q97.5 ),
-    decimals = 3,
-    use_seps = FALSE
-  ) %>%
-  tab_source_note(
-    source_note = "452 observations for the pre-treatment period and 320 observations for the post-treatment period, resulting from the matching procedure, and encompassing municipalities in the same states as municipalities of Obra Transparente"
-  ) %>%
-  tab_options(., container.width = 500, container.height =     500)
+# b1_df %>% gt() %>%
+#   tab_header(
+#     title = "Effect of local OSB social monitoring on construction delivery rates",
+#     subtitle = "Posterior probabilities") %>%
+#   cols_label(
+#     variables = "Variables",
+#     post_mean = "Mean",
+#     post_sd = "Sd",
+#     Q50 = "Median",
+#     Q2.5 = "2.5% CI",
+#     Q97.5 = "97.5% CI"
+#   ) %>%
+#   fmt_number(
+#     columns = c(post_mean, post_sd, Q50, Q2.5, Q97.5 ),
+#     decimals = 3,
+#     use_seps = FALSE
+#   ) %>%
+#   tab_source_note(
+#     source_note = "452 observations for the pre-treatment period and 320 observations for the post-treatment period, resulting from the matching procedure, and encompassing municipalities in the same states as municipalities of Obra Transparente"
+#   ) %>%
+#   tab_options(., container.width = 500, container.height =     500)
+
 ```
