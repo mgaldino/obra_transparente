@@ -26,16 +26,18 @@ author:
   - name: Natália Paiva
     firstname: Natália
     surname: Paiva
-    affiliation: Alandar Consulting - Germany
+    affiliation: Alandar Consulting - Brazil
 acknowledgements: |
   We would like to thank all participants of project Obra Transparente, Vanda Medeiros and the team of Transparência Brasil who worked in the project or in evaluations of the project. The project was funded by an UNDEF grant, which we also thank.
 abstract: |
   This paper examines the effect of bottom-up accountability on public service delivery. We differentiate between information-driven interventions and the mobilization and monitoring efforts of organized Civil Society Organizations (CSOs), and argue that the latter type of interventions can can drive significant policy change. The study evaluates the effectiveness of the Obra Transparente project by Brazilian NGO Transparência Brasil, engaging 21 local CSOs in South and Southeast Brazil.  Our findings emphasize the importance of sustained, coordinated efforts by socially embedded CSOS. These efforts, involving direct engagement with municipal officials and ensuring that their complains cannot be ignored lead to more substantial outcomes when compared with citizens information-driven.
 bibliography: OT_paper.bib
 output: rticles::aea_article
+
 ---
-
-
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning=FALSE)
+```
 
 ```{r package loads, message=F, echo=FALSE}
 library(data.table)
@@ -46,13 +48,8 @@ library(readxl)
 library(tidyverse)
 library(gt)
 library(ipeadatar)
-library(rstan)
-library(arm)
-library(rstanarm)
-library(survey)
-library(broom)
-library(broom.mixed)
-library(MetBrewer)
+library(fixest)
+library(knitr)
 ```
 
 
@@ -152,16 +149,11 @@ obras_inicio_projeto_ot <- obras_inicio_projeto %>%
   left_join(df_cidades_ot, by=join_by("municipio", "uf", "id"))
 
 obras_inicio_projeto_ot <- obras_inicio_projeto_ot %>%
-  mutate(concluida = grepl("Concluída", situacao))
-
-aux_indicator_ot <- df_cidades_ot %>%
-  distinct(municipio, uf) %>%
-  mutate(indicator_muni_ot = 1)
-
-obras_inicio_projeto_ot <- obras_inicio_projeto_ot %>%
-  mutate(indicator_ot = ifelse(is.na(indicator_ot), 0, indicator_ot)) %>%
-  left_join(aux_indicator_ot, by = join_by("municipio", "uf")) %>%
-  mutate(indicator_muni_ot = ifelse(is.na(indicator_muni_ot), 0, indicator_muni_ot))
+  mutate(concluida = grepl("Concluída", situacao),
+         indicator_ot = ifelse(is.na(indicator_ot), 0, indicator_ot)) %>%
+  group_by(municipio) %>%
+  mutate(indicator_muni_ot = max(indicator_ot)) %>%
+  ungroup()
   
 antes_projeto <- obras_inicio_projeto_ot %>%
   dplyr::filter(uf %in% c("SP", "PR", "SP", "SC", "RS", "MG")) %>%
@@ -180,8 +172,9 @@ obras_fim_seg_fase <- obras_fim_seg_fase %>%
          id = as.numeric(id)) %>%
   left_join(df_cidades_ot, by=join_by("municipio", "uf", "id")) %>%
   mutate(indicator_ot = ifelse(is.na(indicator_ot), 0, indicator_ot)) %>%
-  left_join(aux_indicator_ot, by = join_by("municipio", "uf")) %>%
-  mutate(indicator_muni_ot = ifelse(is.na(indicator_muni_ot), 0, indicator_muni_ot))
+  group_by(municipio) %>%
+  mutate(indicator_muni_ot = max(indicator_ot)) %>%
+  ungroup()
 
 depois_projeto <- obras_fim_seg_fase %>%
   dplyr::filter(uf %in% c("SP", "PR", "SP", "SC", "RS", "MG")) %>%
@@ -257,7 +250,7 @@ The advantage of this approach is that all assumptions and restrictions imposed 
 
 ## Data
 
-The evidence gathered is primarily based on documented reports collected by Transparência Brasil and produced by the local OSBs over the course of the project. We also use evidence collected on semi-structured interviews and an online survey with representatives of the 21 CSOs conducted by an independent evaluator of the project. For the quantitative analysis, we use administrative data about construction works data by municipalities and socio-demographic data on municipalities. The questions asked in the survey as well the aggregate answered are presented in annex B.
+The evidence gathered is primarily based on documented reports collected by Transparência Brasil and produced by the local OSBs over the course of the project. We also use evidence collected on semi-structured interviews and an online survey with representatives of the 21 CSOs conducted by an independent evaluator of the project. For the quantitative analysis, we use administrative data about construction works data by municipalities and socio-demographic data on municipalities. A detailed description of the data is provided in the appendix.
 
 ## Case Studies
 
@@ -302,10 +295,10 @@ In Goioerê, the story had a more happy ending. Volunteers visited an already de
 
 We have already observed qualitative evidence indicating that local OSB monitoring played a crucial role in expediting the completion of construction projects. Now, we present quantitative evidence regarding the impact of this monitoring on delivery rates.
 
-To do so, we collected data on school and nursery construction projects across the entire country, encompassing over two thousand municipalities and more than 14 thousand construction projects, spanning all phases from planning to execution and completion. The @ref(tab:table1) below provides descriptive statistics for these construction projects.
+To do so, we collected data on school and nursery construction projects across the entire country, encompassing over two thousand municipalities and more than 14 thousand construction projects, spanning all phases from planning to execution and completion. The table 1 below provides descriptive statistics for these construction projects.
 
 
-When comparing "treated" and "untreated" units, there is difference between the groups, as show below by the percentage of construction works within both groups before the project started.
+Our ideal objective would be to compare the project's effects on the rate of delivery across all units. When comparing "treated" and "untreated" units, there is difference between the groups, as show below by the percentage of construction works within both groups before the project started. As a result, we can't simply fit a regression comparing before and after to estimate the Average Treatment Effect (ATE).
 
 ```{r table1, echo=FALSE, message=FALSE, results='asis'}
 antes_projeto %>%
@@ -316,7 +309,7 @@ antes_projeto %>%
     subtitle = "Situation in August 2017 and August 2019") %>%
    opt_align_table_header(align = "left") %>%
   cols_label(
-    indicator_muni_ot = "# of participating cities",
+    indicator_muni_ot = "Participating cities",
     perc.x = "% (Before Project)",
     perc.y = "% (After Project)"
   ) %>%
@@ -331,19 +324,15 @@ antes_projeto %>%
 ```
 
 
-Our primary objective is to compare the project's effects on the rate of delivery. To estimate the Average Treatment Effect on the Treated (ATT), we employed a matching strategy [@ho_etal2007; @rubin_1973] with a Bayesian logistic regression to create the propensity scores. Balance was successful after matching. We also applied the same procedure to pre-project data to ensure that there were no substantial differences between the treated and control groups.
-
-We estimate all models using the a varying-intercept regression equation [@gelman_2006]:
+However, it is possible to estimate the Average Treatment Effect on the Treated (ATT), by employing a difference-in-difference (DiD) identification strategy. Our main specification model used the following regression equation:
 
 $$
-Y_i = \alpha + \beta_1 T_i + \gamma X_i + \theta Z_i + \epsilon_i
+Y_{it} = \alpha + \beta_1 treatment_{it} + \beta_2 time_{it} + \beta_3treatment_{it} \cdot time_{it} + \theta Z_{it} + \epsilon_{it}
 $$
 
-Where $i$ indexes the construction units, $Y_i$ is $1$ if a construction work is finished and $0$ otherwise. $\alpha$ represents the intercept, $\beta$ denotes the average treatment effect on the treated (ATT), and $T_i$ is a binary treatment indicator (whether the municipality is part of Obra Transparent or not). Symbol $\gamma$ is a vector of varying intercepts, $X_i$ is a matrix of random effects for Brazilian municipalities, $\theta$ is a vector of control variables, and $Z_i$ is an array of control variables for case $i$. The error term is represented by $\epsilon_i$. We employed a Bayesian model with rstanarm [@goodrich_etal2023] with default weakly informative priors on the parameters [@gelman_etal2008].
+Where $i$ indexes the construction units and $t$ the time (before or after the project), $Y_it$ is $1$ if a construction work is finished at time $t$ and $0$ otherwise. $\alpha$ represents the intercept, $\beta3$ estimates the average treatment effect on the treated (ATT), and $treatment_{it}$ is a binary treatment indicator (whether the municipality is part of Obra Transparent or not). The $\theta$ is a vector of control variables, and $Z_i$ is an array of control variables for case $it$. The error term is represented by $\epsilon_{it}$.
 
-The table below presents estimates for the causal effect on the treated units regarding the change in completion rates before and after the project.
-
-```{r prep data matching,  message=FALSE, echo=FALSE, cache=TRUE}
+```{r prep data,  message=FALSE, echo=FALSE, cache=TRUE}
 
 aux_muni1 <- aux_muni %>%
   mutate(name_muni1 = tolower(iconv(name_muni, "UTF-8",  "ASCII//TRANSLIT")))
@@ -393,148 +382,48 @@ save(df_balancing_aux_post_se, file = here("Dados", "df_balancing_aux_post_se.RD
 save(data_pos, file = here("Dados", "data_pos.RData"))
 ```
 
-Table (insert ref number) summarizes the main results of the regression. The first row presents the results for the regression before the project started, where we expect the effect of the project to be zero, since it didn't exist. The second row shows the effect after the end of the project, when we expect the impact to be positive. The first column is an estimate of the posterior mean of the impact of the project and the second one is the posterior standard deviation of the estimate. We also present posterior median and $2.5%$ and $97.5%$ quantiles, in order to quantify the uncertainty around the estimates with a 95% credibility interval.
+Table \@ref(tab:table2) summarizes the main results of the regression. .All models (with and without clustered standard errors) shows a positive treatment effect. In our preferred specification, with controls, the effect of the project on the treated units is 10 percentage points, i.e, a municipality with monitoring by project Obra Transparente had on average 10pp more constructions completed than what we would observe in absence of the treatment.
+These results support our argument and the qualitative evidence we presented that sustained and costly bottom-up accountability improve public policies.
 
-The hypothesis are corroborated, and we did not find an effect before the starting of the project, but found an effect aftet the end of the project. On average, a city that received the project Obra Transparente increases its delivery rate by almost 10%. These results support our argument and the qualitative evidence we presented that sustained and costly bottom-up accountability improve public policies.
-
-```{r pscore, message=FALSE, echo=FALSE}
-
-# these are the no redundancy covariates
-covs.nr <- c('perc_pea18', 'ext_pobres', 'log_rpc', 'p10_ricos_desigualdade', 'freq_escola_15_1', 'analfabetismo',
-             'log_renda', 'log_pop', 'percentual_de_execucao')
-
-# pscore estimation formula with original covariates
-
-ps_spec <- formula(indicator_muni_ot ~ log_rpc  + ext_pobres + freq_escola_15_1 + analfabetismo +
-                     log_renda   +  p10_ricos_desigualdade + percentual_de_execucao)
-
-# Estimation of pscores using stan_glm
-set.seed(1234)
-ps_fit_pre <- stan_glm(ps_spec, family=binomial(link='logit'), 
-                     data=df_balancing_aux_se, algorithm='optimizing', refresh=0, iter = 2000)
-
-
-set.seed(1234)
-ps_fit_pos <- stan_glm(ps_spec, family=binomial(link='logit'), 
-                     data=df_balancing_aux_post_se, algorithm='optimizing', refresh=0, iter = 2000)
-
-# extracting logit pscores
-pscores_pre <- apply(posterior_linpred(ps_fit_pre), 2, mean)
-
-pscores_pos <- apply(posterior_linpred(ps_fit_pos), 2, mean)
-
-# matching
-#matching without replacement, original formula
-matches_pre <- matching(z=df_balancing_aux_se$indicator_muni_ot, score=pscores_pre, replace=FALSE)
-matched_pre <- df_balancing_aux_se[matches_pre$match.ind,]
-
-matches_pos <- matching(z=df_balancing_aux_post_se$indicator_muni_ot, score=pscores_pos, replace=FALSE)
-matched_pos <- df_balancing_aux_post_se[matches_pos$match.ind,]
-
-
-```
-
-```{r fitting bayesian model, message=FALSE, echo=FALSE, cache = TRUE}
-
+```{r prep did, message=FALSE, echo=FALSE}
 df_balancing_aux_se <- df_balancing_aux_se %>%
-  dplyr::select(concluida_num , indicator_muni_ot, code_muni, log_rpc, ext_pobres, freq_escola_15_1,analfabetismo,
-                log_renda, p10_ricos_desigualdade, percentual_de_execucao, municipio)
+  mutate(time = 0) %>%
+  dplyr::select(-cep)
 
-te_spec_nr <- update(ps_spec, concluida_num ~ indicator_muni_ot + (1 | code_muni) + .)
 
-#treatment effect without replacement
+df_balancing_aux_post_se <- df_balancing_aux_post_se %>%
+  mutate(time = 1) %>%
+  dplyr::select(-cep)
 
-set.seed(120)
-reg_ps_pre <- stan_lmer(te_spec_nr, data=df_balancing_aux_se[matches_pre$match.ind,], iter = 4000, refresh=0)
-
-## After
-set.seed(120)
-reg_ps_pos <- stan_lmer(te_spec_nr, data=df_balancing_aux_post_se[matches_pos$match.ind,], iter = 4000, refresh=0)
+df_did <- bind_rows(df_balancing_aux_se,df_balancing_aux_post_se )
 
 ```
 
-```{r processing bayes fit, echo=FALSE,  message=FALSE}
-# posterior draws
+```{r did model, message=FALSE, echo=FALSE, cache = TRUE}
+library(fixest)
+set.seed(120)
 
-##
-# Before
-##
+did_model1 <- feols(concluida_num  ~ time + indicator_muni_ot + time:indicator_muni_ot + log_rpc  + ext_pobres + freq_escola_15_1 + analfabetismo + log_renda   +  p10_ricos_desigualdade + percentual_de_execucao, data = df_did, cluster = "code_muni")
 
-b1_pre_sims <- as.matrix(reg_ps_pre, 
-                     pars = "indicator_muni_ot")
-
-# Posterior mean and SD of treatment
-b1_mean_pre <- mean(b1_pre_sims) # posterior mean
-b1_sd_pre <- sd(b1_pre_sims)       # posterior SD
+did_model2 <- feols(concluida_num  ~ time + indicator_muni_ot + time:indicator_muni_ot + log_rpc  + ext_pobres + freq_escola_15_1 + analfabetismo + log_renda   +  p10_ricos_desigualdade + percentual_de_execucao, data = df_did)
 
 
-# Posterior median and 95% credible interval
-b1_quant_pre <- quantile(b1_pre_sims,   probs = c(0.025, 0.50, 0.975))
+did_model0 <- feols(concluida_num  ~ time + indicator_muni_ot + time:indicator_muni_ot, data = df_did)
 
-b1_quant_pre <- data.frame(t(b1_quant_pre))
-names(b1_quant_pre) <- c("Q2.5", "Q50", "Q97.5")
-
-# Combine summary statistics of posterior simulation draws
-b1_df_pre_cred <- data.frame(variables = "ATT before project",
-                             post_mean = b1_mean_pre,
-                             post_sd = b1_sd_pre,
-                             b1_quant_pre[2], 
-                             b1_quant_pre[1],
-                             b1_quant_pre[3])
-
-
-
-##
-# After
-##
-b1_sims_after <- as.matrix(reg_ps_pos, 
-                     pars = "indicator_muni_ot")
-  
-# Compute mean, SD, median, and 95% credible interval of treatment
-
-# Posterior mean and SD of treatment
-b1_mean_after <- mean(b1_sims_after) # posterior mean
-b1_sd_after <- sd(b1_sims_after)       # posterior SD
-
-# Posterior median and 95% credible interval
-b1_quant_after <- quantile(b1_sims_after,   probs = c(0.025, 0.50, 0.975))
-
-b1_quant_after <- data.frame(t(b1_quant_after))
-names(b1_quant_after) <- c("Q2.5", "Q50", "Q97.5")
-
-# Combine summary statistics of posterior simulation draws
-b1_df_after_cred <- data.frame(variables = "ATT After project",
-                             post_mean = b1_mean_after,
-                             post_sd = b1_sd_after,
-                             b1_quant_after[2], 
-                             b1_quant_after[1],
-                             b1_quant_after[3])
-b1_df <- bind_rows(b1_df_pre_cred, b1_df_after_cred)
 ```
 
 ```{r table2, echo=FALSE,  message=FALSE, results='asis'}
 
-b1_df %>% gt() %>%
-  tab_header(
-    title = "Effect of local OSB social monitoring on construction delivery rates",
-    subtitle = "Posterior probabilities") %>%
-  cols_label(
-    variables = "Variables",
-    post_mean = "Mean",
-    post_sd = "Sd",
-    Q50 = "Median",
-    Q2.5 = "2.5% CI",
-    Q97.5 = "97.5% CI"
-  ) %>%
-  fmt_number(
-    columns = c(post_mean, post_sd, Q50, Q2.5, Q97.5 ),
-    decimals = 3,
-    use_seps = FALSE
-  ) %>%
-  tab_source_note(
-    source_note = "452 observations for the pre-treatment period and 320 observations for the post-treatment period, resulting from the matching procedure, and encompassing municipalities in the same states as municipalities of Obra Transparente"
-  ) %>%
-  tab_options(., container.width = 500, container.height =     500)
+etable(did_model0, did_model2, did_model1, dict = c(concluida_num = "construction completed",
+                                                    indicator_muni_ot ="treatment",
+                                                    log_rpc = "log of per capita income",
+                                                    ext_pobres = "share of poor people",
+                                                    freq_escola_15_1 = "average school frequency",
+                                                    analfabetismo = "iliteracy rate",
+                                                    log_renda = "log of GDP",
+                                                    p10_ricos_desigualdade = "share of income of 10p richest",
+                                                    percentual_de_execucao = "construction execution percentual")) %>%
+  kable(aption = "DiD regression results")
 ```
 
 
@@ -542,21 +431,18 @@ b1_df %>% gt() %>%
 
 One of the reasons identified for some of the problems with the construction works is lack of qualified personnel from the government to monitor the contractor work. As a result, the local government does not properly oversight the work of contractors. And this is a task that requires technical expertise and is time consuming, involving going multiple times to the construction site, comparing the construction log with the schedule to assess if there is potential delay and what is specified in the contract, to assess if the materials used are correct, if everything demanded is being done etc.
 
-The fact that an intervention like Tá de Pé [@freire_etal2020], which provided information to citizens about construction work, but did not produce a meaningful impact does not mean that bottom up accountability does not have any effect. The evidence we gathered here, assessed with multiple methods, clearly shows that costly and consistent oversight by civil society can produce results that are quite impactful, be it increased rate of project completion, improved quality of the construction works or decreasing in governmental spending.
+The fact that an intervention like Tá de Pé [@freire_etal2020], which provided information to citizens about construction work, did not produce a meaningful impact does not mean that bottom up accountability does not have any effect. The evidence we gathered here, assessed with multiple methods, clearly shows that costly and consistent oversight by civil society can produce results that are quite impactful, be it increased rate of project completion, improved quality of the construction works or reduction in governmental spending.
 
+The qualitative evidence gathered is important to elucidate the mechanism. It is important to contact local authorities multiple times. This way, it is harder for them no not listen to citizens. Another key aspect is to have a deep knowledge of the policy in question. In our case, we are talking about understanding a construction time table, knowing what the law and the contract mandates, be able to confidently estimate if the number of employees in a construction site will be enough to deliver at the due date and monitoring repeatedly over time to check if things are going well or not.
 
 The detection of evidence of procurement fraud cases also shows local administrations are not diligent enough in conducting procurement procedures, and the local partners of TB contributed to addressing that gap as well. Moreover, as federal audit agencies lack the capacity to adequately oversee and analyze the immense volume of contracting procedures conducted at the local level, the social monitoring resulted in the identification of high-risk cases that otherwise might not have been assessed by the competent bodies.
 
 ## Concluding Remarks
 
-Accountability, as a fundamental element in democratic systems, plays a pivotal role in ensuring the efficient provision of public services. Recent studies have brought to light the concept of "bottom-up accountability," where citizens receive information about public policies and utilize it to exert social control.
+Accountability, as a fundamental element in democratic systems, plays a pivotal role in ensuring the efficient provision of public services. Recent studies that have investigated tactical interventions aimed at providing information to citizens have shown limited impact of such treatments. However,it would be a mistake to dismiss the potential of citizen voices in governance entirely. Our research has differentiated between information-led tactical interventions and active mobilization and monitoring by Civil Society Organizations (CSOs). We argue that organized CSOs, deeply rooted in society and politics, hold the capacity to bring about substantial policy change.
 
-While tactical interventions aimed at providing information to citizens have shown limited impact, it would be a mistake to dismiss the potential of citizen voices in governance entirely. Our research has differentiated between information-led tactical interventions and active mobilization and monitoring by Civil Society Organizations (CSOs). We argue that organized CSOs, deeply rooted in society and politics, hold the capacity to bring about substantial policy change.
+This paper provides evidence in support of this argument. By assessing the effectiveness of the "Obra Transparente" project developed by Transparência Brasil in Brazil, we illustrate the significant role that an organized CSOs can play in shaping government behavior and improving public service delivery. Unlike interventions solely focused on providing information, this project aimed at creating a network of local CSOs, offering technical support, and providing training on monitoring public school and nursery construction projects.
 
-This paper provides evidence in support of this argument. By assessing the effectiveness of the "Obra Transparente" project developed by Transparência Brasil, we illustrate the significant role that organized CSOs can play in shaping government behavior and improving public service delivery. Unlike interventions solely focused on providing information, this project aimed at creating a network of local CSOs, offering technical support, and providing training on monitoring public school and nursery construction projects.
-
-Our findings underscore the importance of sustained, concerted efforts by organized civil society, including direct engagement with municipal officials, persistent follow-ups, and on-site visits. These endeavors yield more substantial outcomes compared to interventions that merely deliver information and generate sporadic citizen actions.
-
-In a world where accountability mechanisms continue to evolve, the role of organized civil society remains paramount. The ability to foster collective action, create informed oversight, and influence policy change is an essential aspect of accountable and effective democratic governance. The journey toward enhancing bottom-up accountability is ongoing, and our research contributes to a more comprehensive understanding of how it can be achieved through the mobilization of organized civil society.
+Our findings underscore the importance of sustained, concerted efforts by organized civil society, including direct engagement with municipal officials, persistent follow-ups, and on-site visits. These endeavors yield more substantial outcomes compared to interventions that merely deliver information and generate sporadic citizen actions. our research contributes to a more comprehensive understanding of how bottom up accountability can be achieved through the mobilization of organized civil society.
 
 ## References
