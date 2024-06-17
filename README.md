@@ -13,7 +13,7 @@ The code in this replication package constructs the analysis file from the [inse
 
 | Data.Name  | Data.Files | Location | Provided | Citation |
 | -- | -- | -- | -- | -- | 
-| “Candidates cities to host the project” | candidates.rdsa | data/ | TRUE | to_define |
+| “Candidates cities to host the project” | candidates.rds | data/ | TRUE | to_define |
 | “SIMEC Data Before Start of Project” | antes_projeto.rds| Data/ | TRUE | Brasil (2015) |
 | “SIMEC DATA AFter end of Project” | depois_projeto.rds | data/ | TRUE | Brasil Board (2020) |
 
